@@ -12,6 +12,11 @@ interface Props {
   onEdit?: (jogo: Jogo) => void
 }
 
+function formatNota(value: number | null): string {
+  if (value === null || value === undefined) return ''
+  return Number.isInteger(value) ? String(value) : value.toFixed(1)
+}
+
 function formatDateBr(value: string | null): string {
   if (!value) return '—'
   const [year, month, day] = value.split('-')
@@ -53,9 +58,9 @@ export function GameCard({ jogo, onEdit }: Props) {
         {/* Nota — canto superior direito */}
         {nota && (
           <div className="absolute top-2 right-2 flex items-center justify-center
-                          w-9 h-9 rounded-full bg-black/70 backdrop-blur-sm
+                          min-w-9 h-9 px-2 rounded-full bg-black/70 backdrop-blur-sm
                           border border-purple-500/50 text-sm font-bold text-purple-300">
-            {Number(jogo.nota_pessoal).toFixed(0)}
+            {formatNota(jogo.nota_pessoal)}
           </div>
         )}
 
