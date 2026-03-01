@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 import type { Jogo } from '@/types/jogo'
 
 type ChatMessage = {
@@ -9,6 +10,277 @@ type ChatMessage = {
 type BotRequest = {
   messages: ChatMessage[]
   jogos: Jogo[]
+}
+
+type BotMutation = {
+  type: 'insert' | 'update' | 'delete'
+  jogo?: Jogo
+  id?: string
+}
+
+function normalizeText(text: string) {
+  return text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .trim()
+}
+
+function parseStatus(raw: string): Jogo['status'] | null {
+  const value = normalizeText(raw).replace(/\.+$/g, '')
+  if (value === 'zerei') return 'Zerei'
+  if (value === 'desisti') return 'Desisti'
+  if (value === 'pausa') return 'Pausa'
+  if (value === 'jogando') return 'Jogando'
+  if (value === 'querendo') return 'Querendo...'
+  return null
+}
+
+function parseKeyValueArgs(text: string) {
+  const result: Record<string, string> = {}
+  const regex = /(\w+)=("[^"]*"|'[^']*'|\S+)/g
+  let match: RegExpExecArray | null
+
+  while ((match = regex.exec(text)) !== null) {
+    const key = match[1].toLowerCase()
+    const value = match[2].replace(/^['"]|['"]$/g, '')
+    result[key] = value
+  }
+
+  return result
+}
+
+function parseNumber(value?: string): number | null {
+  if (!value) return null
+  const normalized = value.replace(',', '.')
+  const num = Number(normalized)
+  return Number.isFinite(num) ? num : null
+}
+
+function parseDate(value?: string): string | null {
+  if (!value) return null
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
+  return value
+}
+
+function getSupabaseServerClient() {
+  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) return null
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return createClient<any>(supabaseUrl, supabaseKey)
+}
+
+async function findGameByName(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  jogos: Jogo[],
+  rawName: string
+): Promise<Jogo | null> {
+  const name = rawName.trim().replace(/^['"]|['"]$/g, '')
+  if (!name) return null
+
+  const normalizedName = normalizeText(name)
+  const local = jogos.find((j) => normalizeText(j.nome_do_jogo) === normalizedName)
+    ?? jogos.find((j) => normalizeText(j.nome_do_jogo).includes(normalizedName))
+
+  if (local) return local
+
+  const { data } = await supabase
+    .from('jogos')
+    .select('*')
+    .ilike('nome_do_jogo', `%${name}%`)
+    .limit(1)
+
+  return data?.[0] ?? null
+}
+
+async function handleCommandAction(
+  input: string,
+  jogos: Jogo[]
+): Promise<{ reply: string; mutation?: BotMutation } | null> {
+  const trimmed = input.trim()
+  if (!trimmed) return null
+
+  const supabase = getSupabaseServerClient()
+  if (!supabase) {
+    return {
+      reply: 'Supabase não configurado no servidor para executar ações. Configure as variáveis de ambiente.',
+    }
+  }
+
+  if (trimmed === '/help') {
+    return {
+      reply: [
+        'Comandos disponíveis:',
+        '/add nome="Jogo" plataforma=STEAM status=Jogando genero="Ação" nota=9.5 valor=59.9 inicio=2026-03-01 fim=2026-03-10 capa=https://...',
+        '/status "Nome do Jogo" Zerei',
+        '/nota "Nome do Jogo" 9.5',
+        '/delete "Nome do Jogo"',
+        'Também aceito frases: "muda status de Katana Zero para Zerei" ou "nota de Spider-Man Remastered para 9.5".',
+      ].join('\n'),
+    }
+  }
+
+  if (trimmed.startsWith('/status ')) {
+    const match = trimmed.match(/^\/status\s+"([^"]+)"\s+(.+)$/i)
+      ?? trimmed.match(/^\/status\s+(.+?)\s+(zerei|desisti|pausa|querendo\.{0,3}|jogando)$/i)
+
+    if (!match) {
+      return { reply: 'Formato inválido. Use: /status "Nome do Jogo" Zerei' }
+    }
+
+    const nome = match[1]
+    const status = parseStatus(match[2])
+    if (!status) return { reply: 'Status inválido. Use: Zerei, Desisti, Pausa, Querendo..., Jogando.' }
+
+    const alvo = await findGameByName(supabase, jogos, nome)
+    if (!alvo) return { reply: `Não encontrei o jogo "${nome}".` }
+
+    const patch: Partial<Jogo> = {
+      status,
+      desistiu: status === 'Desisti',
+    }
+
+    if (status === 'Zerei' && !alvo.data_finalizada) {
+      patch.data_finalizada = new Date().toISOString().slice(0, 10)
+    }
+
+    const { data, error } = await supabase
+      .from('jogos')
+      .update(patch)
+      .eq('id', alvo.id)
+      .select('*')
+      .single()
+
+    if (error) return { reply: `Erro ao atualizar status: ${error.message}` }
+
+    return {
+      reply: `Status de "${data.nome_do_jogo}" atualizado para ${data.status}.`,
+      mutation: { type: 'update', jogo: data as Jogo },
+    }
+  }
+
+  if (trimmed.startsWith('/nota ')) {
+    const match = trimmed.match(/^\/nota\s+"([^"]+)"\s+([\d.,]+)$/i)
+      ?? trimmed.match(/^\/nota\s+(.+?)\s+([\d.,]+)$/i)
+
+    if (!match) {
+      return { reply: 'Formato inválido. Use: /nota "Nome do Jogo" 9.5' }
+    }
+
+    const nome = match[1]
+    const nota = parseNumber(match[2])
+    if (nota === null || nota < 0 || nota > 10) {
+      return { reply: 'Nota inválida. Use um valor entre 0 e 10.' }
+    }
+
+    const alvo = await findGameByName(supabase, jogos, nome)
+    if (!alvo) return { reply: `Não encontrei o jogo "${nome}".` }
+
+    const { data, error } = await supabase
+      .from('jogos')
+      .update({ nota_pessoal: nota })
+      .eq('id', alvo.id)
+      .select('*')
+      .single()
+
+    if (error) return { reply: `Erro ao atualizar nota: ${error.message}` }
+
+    return {
+      reply: `Nota de "${data.nome_do_jogo}" atualizada para ${nota}.`,
+      mutation: { type: 'update', jogo: data as Jogo },
+    }
+  }
+
+  if (trimmed.startsWith('/delete ')) {
+    const match = trimmed.match(/^\/delete\s+"([^"]+)"$/i)
+      ?? trimmed.match(/^\/delete\s+(.+)$/i)
+
+    if (!match) {
+      return { reply: 'Formato inválido. Use: /delete "Nome do Jogo"' }
+    }
+
+    const nome = match[1]
+    const alvo = await findGameByName(supabase, jogos, nome)
+    if (!alvo) return { reply: `Não encontrei o jogo "${nome}".` }
+
+    const { error } = await supabase
+      .from('jogos')
+      .delete()
+      .eq('id', alvo.id)
+
+    if (error) return { reply: `Erro ao deletar: ${error.message}` }
+
+    return {
+      reply: `Jogo "${alvo.nome_do_jogo}" removido do catálogo.`,
+      mutation: { type: 'delete', id: alvo.id },
+    }
+  }
+
+  if (trimmed.startsWith('/add ')) {
+    const args = parseKeyValueArgs(trimmed.replace('/add', '').trim())
+    const nome = args.nome
+
+    if (!nome) {
+      return { reply: 'Use /add com nome="...". Exemplo: /add nome="Hades" plataforma=STEAM status=Jogando' }
+    }
+
+    const status = parseStatus(args.status ?? 'Querendo...') ?? 'Querendo...'
+    const nota = parseNumber(args.nota)
+    const valor = parseNumber(args.valor)
+    const inicio = parseDate(args.inicio)
+    const fim = parseDate(args.fim)
+
+    if (nota !== null && (nota < 0 || nota > 10)) {
+      return { reply: 'Nota inválida no /add. Use entre 0 e 10.' }
+    }
+
+    const novoJogo = {
+      nome_do_jogo: nome,
+      plataforma: (args.plataforma ?? 'OUTRO').toUpperCase(),
+      genero: args.genero ?? '',
+      status,
+      valor_pago: valor,
+      data_inicio: inicio,
+      nota_pessoal: nota,
+      data_finalizada: fim,
+      desistiu: status === 'Desisti',
+      capa_url: args.capa ?? null,
+    }
+
+    const { data, error } = await supabase
+      .from('jogos')
+      .insert([novoJogo])
+      .select('*')
+      .single()
+
+    if (error) return { reply: `Erro ao adicionar jogo: ${error.message}` }
+
+    return {
+      reply: `Jogo "${data.nome_do_jogo}" adicionado com sucesso.`,
+      mutation: { type: 'insert', jogo: data as Jogo },
+    }
+  }
+
+  const statusNatural = trimmed.match(/status\s+de\s+(.+?)\s+para\s+(zerei|desisti|pausa|querendo\.{0,3}|jogando)/i)
+  if (statusNatural) {
+    return handleCommandAction(`/status "${statusNatural[1]}" ${statusNatural[2]}`, jogos)
+  }
+
+  const notaNatural = trimmed.match(/nota\s+de\s+(.+?)\s+para\s+([\d.,]+)/i)
+  if (notaNatural) {
+    return handleCommandAction(`/nota "${notaNatural[1]}" ${notaNatural[2]}`, jogos)
+  }
+
+  const deleteNatural = trimmed.match(/(deletar|delet|apagar|apaga|remover|remove|excluir|exclui)\s+(.+)/i)
+  if (deleteNatural) {
+    return handleCommandAction(`/delete "${deleteNatural[2]}"`, jogos)
+  }
+
+  return null
 }
 
 function buildResumo(jogos: Jogo[]) {
@@ -74,6 +346,16 @@ export async function POST(req: NextRequest) {
 
     if (!messages.length) {
       return NextResponse.json({ reply: 'Envie uma mensagem para começar.' }, { status: 400 })
+    }
+
+    const userInput = messages.at(-1)?.content ?? ''
+    const actionResult = await handleCommandAction(userInput, jogos)
+    if (actionResult) {
+      return NextResponse.json({
+        reply: actionResult.reply,
+        mutation: actionResult.mutation,
+        mode: 'action',
+      })
     }
 
     const apiKey = process.env.OPENAI_API_KEY

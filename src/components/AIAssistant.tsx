@@ -8,18 +8,33 @@ type Message = {
   content: string
 }
 
-interface Props {
-  jogos: Jogo[]
+type BotMutation = {
+  type: 'insert' | 'update' | 'delete'
+  jogo?: Jogo
+  id?: string
 }
 
-export function AIAssistant({ jogos }: Props) {
+interface Props {
+  jogos: Jogo[]
+  onMutation?: (mutation: BotMutation) => void
+}
+
+export function AIAssistant({ jogos, onMutation }: Props) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Sou seu bot gamer 🤖. Posso resumir progresso, gastos e sugerir o próximo jogo.',
+      content: [
+        'Sou seu bot gamer 🤖. Posso resumir progresso, gastos e sugerir o próximo jogo.',
+        'Também executo ações reais no catálogo com comandos:',
+        '/status "Nome do Jogo" Zerei',
+        '/nota "Nome do Jogo" 9.5',
+        '/delete "Nome do Jogo"',
+        '/add nome="Hades" plataforma=STEAM status=Jogando nota=9.0',
+        'Digite /help para ver tudo.',
+      ].join('\n'),
     },
   ])
 
@@ -50,6 +65,10 @@ export function AIAssistant({ jogos }: Props) {
       const data = await response.json()
       const reply = data?.reply ?? 'Não consegui responder agora.'
 
+      if (data?.mutation && onMutation) {
+        onMutation(data.mutation as BotMutation)
+      }
+
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }])
     } catch {
       setMessages((prev) => [
@@ -73,12 +92,12 @@ export function AIAssistant({ jogos }: Props) {
       </button>
 
       {open && (
-        <div className="fixed z-50 bottom-20 right-5 w-[360px] max-w-[calc(100vw-2rem)]
-                        h-[520px] bg-[#13132a] border border-white/10 rounded-2xl
+        <div className="fixed z-50 bottom-20 right-5 w-90 max-w-[calc(100vw-2rem)]
+            h-130 bg-[#13132a] border border-white/10 rounded-2xl
                         shadow-2xl shadow-black/60 flex flex-col overflow-hidden">
           <div className="px-4 py-3 border-b border-white/10 bg-[#181834]">
             <h3 className="text-sm font-bold text-white">Assistente Gamer IA</h3>
-            <p className="text-xs text-slate-400">Resumo, recomendação e estratégia do catálogo</p>
+            <p className="text-xs text-slate-400">Resumo, recomendação e ações reais no catálogo</p>
           </div>
 
           <div className="flex-1 overflow-y-auto p-3 space-y-2">

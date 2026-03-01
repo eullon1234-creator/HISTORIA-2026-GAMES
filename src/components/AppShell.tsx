@@ -6,6 +6,12 @@ import { Dashboard } from './Dashboard'
 import { GameForm } from './GameForm'
 import { AIAssistant } from './AIAssistant'
 
+type BotMutation = {
+  type: 'insert' | 'update' | 'delete'
+  jogo?: Jogo
+  id?: string
+}
+
 interface Props {
   jogosList: Jogo[]
 }
@@ -41,6 +47,24 @@ export function AppShell({ jogosList }: Props) {
     setModalAberto(false)
   }, [])
 
+  const handleBotMutation = useCallback((mutation: BotMutation) => {
+    setJogos((prev) => {
+      if (mutation.type === 'delete' && mutation.id) {
+        return prev.filter((j) => j.id !== mutation.id)
+      }
+
+      if ((mutation.type === 'insert' || mutation.type === 'update') && mutation.jogo) {
+        const exists = prev.some((j) => j.id === mutation.jogo?.id)
+        if (exists) {
+          return prev.map((j) => (j.id === mutation.jogo?.id ? mutation.jogo : j))
+        }
+        return [mutation.jogo, ...prev]
+      }
+
+      return prev
+    })
+  }, [])
+
   return (
     <>
       <Dashboard
@@ -58,7 +82,7 @@ export function AppShell({ jogosList }: Props) {
         />
       )}
 
-      <AIAssistant jogos={jogos} />
+      <AIAssistant jogos={jogos} onMutation={handleBotMutation} />
     </>
   )
 }
