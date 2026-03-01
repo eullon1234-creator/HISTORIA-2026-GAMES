@@ -31,6 +31,61 @@ type ExtractedAction = {
   capa?: string
 }
 
+function shouldUseSmartModel(input: string): boolean {
+  const text = input.trim()
+  if (!text) return false
+
+  const normalized = normalizeText(text)
+
+  if (normalized.length >= 220) return true
+
+  const strategicTerms = [
+    'melhor',
+    'estrategia',
+    'plano',
+    'comparar',
+    'vale a pena',
+    'prioridade',
+    'organizar',
+    'explica',
+    'analisa',
+    'otimizar',
+  ]
+
+  const hasStrategicTerm = strategicTerms.some((term) => normalized.includes(term))
+  if (hasStrategicTerm) return true
+
+  const multiIntentHints = [
+    ' e depois ',
+    ' tambem ',
+    ' além disso',
+    ' junto com ',
+    ' ao mesmo tempo ',
+  ]
+
+  const hasMultiIntent = multiIntentHints.some((hint) => normalized.includes(hint))
+  if (hasMultiIntent) return true
+
+  const actionVerbs = ['adiciona', 'muda', 'altera', 'deleta', 'remove', 'nota', 'status', 'plataforma']
+  const verbCount = actionVerbs.reduce((count, verb) => count + (normalized.includes(verb) ? 1 : 0), 0)
+  if (verbCount >= 2) return true
+
+  return false
+}
+
+function pickModelsForInput(input: string) {
+  const fastModel = process.env.OPENAI_MODEL_FAST ?? process.env.OPENAI_MODEL ?? 'gpt-4o-mini'
+  const smartModel = process.env.OPENAI_MODEL_SMART ?? 'gpt-5'
+  const useSmart = shouldUseSmartModel(input)
+
+  return {
+    fastModel,
+    smartModel,
+    selectedModel: useSmart ? smartModel : fastModel,
+    usedSmart: useSmart,
+  }
+}
+
 function normalizeText(text: string) {
   return text
     .normalize('NFD')
@@ -498,10 +553,10 @@ export async function POST(req: NextRequest) {
     }
 
     const apiKey = process.env.OPENAI_API_KEY
-    const model = process.env.OPENAI_MODEL ?? 'gpt-4o-mini'
+    const modelChoice = pickModelsForInput(userInput)
 
     if (apiKey) {
-      const extracted = await tryExtractActionWithAI(apiKey, model, userInput, jogos)
+      const extracted = await tryExtractActionWithAI(apiKey, modelChoice.selectedModel, userInput, jogos)
       const commandFromAI = extracted ? actionToCommand(extracted) : null
       if (commandFromAI) {
         const aiActionResult = await handleCommandAction(commandFromAI, jogos)
@@ -510,6 +565,7 @@ export async function POST(req: NextRequest) {
             reply: `${aiActionResult.reply} (ação interpretada automaticamente)`,
             mutation: aiActionResult.mutation,
             mode: 'ai-action',
+            model: modelChoice.selectedModel,
           })
         }
       }
@@ -559,7 +615,7 @@ export async function POST(req: NextRequest) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model,
+        model: modelChoice.selectedModel,
         temperature: 0.4,
         messages: chatMessages,
       }),
@@ -579,6 +635,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       reply: reply || 'Não consegui gerar resposta agora.',
       mode: 'ai',
+      model: modelChoice.selectedModel,
+      strategy: modelChoice.usedSmart ? 'smart' : 'fast',
     })
   } catch {
     return NextResponse.json({ reply: 'Erro ao processar mensagem do bot.' }, { status: 500 })
