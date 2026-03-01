@@ -8,6 +8,7 @@ type Message = {
   content: string
   meta?: {
     strategy?: 'fast' | 'smart'
+    provider?: 'openai' | 'gemini'
     model?: string
   }
 }
@@ -125,6 +126,7 @@ export function AIAssistant({ jogos, onMutation }: Props) {
           content: reply,
           meta: {
             strategy: data?.strategy,
+            provider: data?.provider,
             model: data?.model,
           },
         },
@@ -194,6 +196,7 @@ export function AIAssistant({ jogos, onMutation }: Props) {
                 {msg.role === 'assistant' && (msg.meta?.strategy || msg.meta?.model) && (
                   <div className="mt-1 text-[10px] text-slate-400">
                     {msg.meta?.strategy ? `modo: ${msg.meta.strategy}` : 'modo: n/a'}
+                    {msg.meta?.provider ? ` • provider: ${msg.meta.provider}` : ''}
                     {msg.meta?.model ? ` • modelo: ${msg.meta.model}` : ''}
                   </div>
                 )}

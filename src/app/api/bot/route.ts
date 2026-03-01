@@ -31,6 +31,13 @@ type ExtractedAction = {
   capa?: string
 }
 
+type AIProvider = 'openai' | 'gemini'
+
+type ProviderConfig = {
+  provider: AIProvider
+  apiKey: string
+}
+
 function shouldUseSmartModel(input: string): boolean {
   const text = input.trim()
   if (!text) return false
@@ -73,9 +80,31 @@ function shouldUseSmartModel(input: string): boolean {
   return false
 }
 
-function pickModelsForInput(input: string) {
-  const fastModel = process.env.OPENAI_MODEL_FAST ?? process.env.OPENAI_MODEL ?? 'gpt-4o-mini'
-  const smartModel = process.env.OPENAI_MODEL_SMART ?? 'gpt-5'
+function getProviderConfig(): ProviderConfig | null {
+  const geminiKey = process.env.GEMINI_API_KEY
+  const openaiKey = process.env.OPENAI_API_KEY
+  const preferred = (process.env.AI_PROVIDER ?? '').toLowerCase()
+
+  if ((preferred === 'gemini' && geminiKey) || (geminiKey && !openaiKey)) {
+    return { provider: 'gemini', apiKey: geminiKey }
+  }
+
+  if ((preferred === 'openai' && openaiKey) || openaiKey) {
+    return { provider: 'openai', apiKey: openaiKey }
+  }
+
+  return null
+}
+
+function pickModelsForInput(input: string, provider: AIProvider) {
+  const fastModel = provider === 'gemini'
+    ? (process.env.GEMINI_MODEL_FAST ?? 'gemini-1.5-flash')
+    : (process.env.OPENAI_MODEL_FAST ?? process.env.OPENAI_MODEL ?? 'gpt-4o-mini')
+
+  const smartModel = provider === 'gemini'
+    ? (process.env.GEMINI_MODEL_SMART ?? 'gemini-1.5-pro')
+    : (process.env.OPENAI_MODEL_SMART ?? 'gpt-5')
+
   const useSmart = shouldUseSmartModel(input)
 
   return {
@@ -84,6 +113,89 @@ function pickModelsForInput(input: string) {
     selectedModel: useSmart ? smartModel : fastModel,
     usedSmart: useSmart,
   }
+}
+
+function extractJsonObject(text: string): string | null {
+  const trimmed = text.trim()
+
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    return trimmed
+  }
+
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
+  if (fenced?.[1]) {
+    const candidate = fenced[1].trim()
+    if (candidate.startsWith('{') && candidate.endsWith('}')) return candidate
+  }
+
+  const start = trimmed.indexOf('{')
+  const end = trimmed.lastIndexOf('}')
+  if (start >= 0 && end > start) return trimmed.slice(start, end + 1)
+
+  return null
+}
+
+async function callAIChat(
+  config: ProviderConfig,
+  model: string,
+  systemInstruction: string,
+  messages: { role: 'system' | 'user' | 'assistant'; content: string }[],
+  temperature: number
+): Promise<string | null> {
+  if (config.provider === 'openai') {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        temperature,
+        messages: [
+          { role: 'system', content: systemInstruction },
+          ...messages.filter((m) => m.role !== 'system'),
+        ],
+      }),
+    })
+
+    if (!response.ok) return null
+    const data = await response.json()
+    return data?.choices?.[0]?.message?.content?.trim() ?? null
+  }
+
+  const geminiModel = model.replace(/^models\//, '')
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${config.apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: {
+          role: 'system',
+          parts: [{ text: systemInstruction }],
+        },
+        contents: messages
+          .filter((m) => m.role !== 'system')
+          .map((m) => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }],
+          })),
+        generationConfig: {
+          temperature,
+        },
+      }),
+    }
+  )
+
+  if (!response.ok) return null
+  const data = await response.json()
+  const text = data?.candidates?.[0]?.content?.parts
+    ?.map((p: { text?: string }) => p.text ?? '')
+    .join('')
+    .trim()
+
+  return text || null
 }
 
 function normalizeText(text: string) {
@@ -394,7 +506,7 @@ async function handleCommandAction(
 }
 
 async function tryExtractActionWithAI(
-  apiKey: string,
+  config: ProviderConfig,
   model: string,
   input: string,
   jogos: Jogo[]
@@ -409,29 +521,20 @@ async function tryExtractActionWithAI(
     `Nomes de jogos existentes: ${jogos.map((j) => j.nome_do_jogo).join(' | ')}`,
   ].join('\n')
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0,
-      messages: [
-        { role: 'system', content: 'Você extrai intenção para automações e responde em JSON.' },
-        { role: 'user', content: prompt },
-      ],
-    }),
-  })
+  const raw = await callAIChat(
+    config,
+    model,
+    'Você extrai intenção para automações e responde somente em JSON válido.',
+    [{ role: 'user', content: prompt }],
+    0
+  )
 
-  if (!response.ok) return null
-  const data = await response.json()
-  const raw = data?.choices?.[0]?.message?.content?.trim()
   if (!raw) return null
 
   try {
-    const parsed = JSON.parse(raw) as ExtractedAction
+    const jsonText = extractJsonObject(raw)
+    if (!jsonText) return null
+    const parsed = JSON.parse(jsonText) as ExtractedAction
     if (!parsed?.action) return null
     return parsed
   } catch {
@@ -528,7 +631,7 @@ function fallbackAnswer(messages: ChatMessage[], jogos: Jogo[]) {
   return [
     'Consigo te ajudar com estatísticas e recomendações do seu catálogo.',
     `Resumo atual: ${resumo.total} jogos, ${resumo.zerei} zerado(s), ${resumo.jogando} jogando, R$ ${resumo.gasto.toFixed(2)} gastos.`,
-    'Se quiser IA completa, configure OPENAI_API_KEY no Vercel e no .env.local.',
+    'Se quiser IA completa, configure GEMINI_API_KEY ou OPENAI_API_KEY no Vercel e no .env.local.',
   ].join(' ')
 }
 
@@ -552,11 +655,12 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const apiKey = process.env.OPENAI_API_KEY
-    const modelChoice = pickModelsForInput(userInput)
+    const providerConfig = getProviderConfig()
+    const provider = providerConfig?.provider
+    const modelChoice = provider ? pickModelsForInput(userInput, provider) : null
 
-    if (apiKey) {
-      const extracted = await tryExtractActionWithAI(apiKey, modelChoice.selectedModel, userInput, jogos)
+    if (providerConfig && modelChoice) {
+      const extracted = await tryExtractActionWithAI(providerConfig, modelChoice.selectedModel, userInput, jogos)
       const commandFromAI = extracted ? actionToCommand(extracted) : null
       if (commandFromAI) {
         const aiActionResult = await handleCommandAction(commandFromAI, jogos)
@@ -565,13 +669,15 @@ export async function POST(req: NextRequest) {
             reply: `${aiActionResult.reply} (ação interpretada automaticamente)`,
             mutation: aiActionResult.mutation,
             mode: 'ai-action',
+            provider,
             model: modelChoice.selectedModel,
+            strategy: modelChoice.usedSmart ? 'smart' : 'fast',
           })
         }
       }
     }
 
-    if (!apiKey) {
+    if (!providerConfig || !modelChoice) {
       return NextResponse.json({ reply: fallbackAnswer(messages, jogos), mode: 'fallback' })
     }
 
@@ -599,42 +705,37 @@ export async function POST(req: NextRequest) {
       jogos: jogosCompactos,
     }
 
-    const chatMessages = [
+    const chatMessages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
       { role: 'system', content: system },
       {
         role: 'user',
         content: `Contexto do catálogo (JSON): ${JSON.stringify(contexto)}`,
       },
-      ...messages.slice(-12).map((m) => ({ role: m.role, content: m.content })),
+      ...messages.slice(-12).map((m) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      })),
     ]
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: modelChoice.selectedModel,
-        temperature: 0.4,
-        messages: chatMessages,
-      }),
-    })
+    const reply = await callAIChat(
+      providerConfig,
+      modelChoice.selectedModel,
+      system,
+      chatMessages,
+      0.4
+    )
 
-    if (!response.ok) {
-      const errorText = await response.text()
+    if (!reply) {
       return NextResponse.json(
-        { reply: `Não consegui consultar a IA agora. (${response.status}) ${errorText.slice(0, 200)}` },
+        { reply: `Não consegui consultar a IA agora (${providerConfig.provider}).` },
         { status: 200 }
       )
     }
 
-    const data = await response.json()
-    const reply = data?.choices?.[0]?.message?.content?.trim()
-
     return NextResponse.json({
-      reply: reply || 'Não consegui gerar resposta agora.',
+      reply,
       mode: 'ai',
+      provider,
       model: modelChoice.selectedModel,
       strategy: modelChoice.usedSmart ? 'smart' : 'fast',
     })
