@@ -18,6 +18,19 @@ type BotMutation = {
   id?: string
 }
 
+type ExtractedAction = {
+  action: 'none' | 'add' | 'status' | 'nota' | 'delete' | 'plataforma'
+  nome?: string
+  status?: string
+  nota?: number
+  plataforma?: string
+  genero?: string
+  valor?: number
+  inicio?: string
+  fim?: string
+  capa?: string
+}
+
 function normalizeText(text: string) {
   return text
     .normalize('NFD')
@@ -118,9 +131,41 @@ async function handleCommandAction(
         '/add nome="Jogo" plataforma=STEAM status=Jogando genero="Ação" nota=9.5 valor=59.9 inicio=2026-03-01 fim=2026-03-10 capa=https://...',
         '/status "Nome do Jogo" Zerei',
         '/nota "Nome do Jogo" 9.5',
+        '/plataforma "Nome do Jogo" SWITCH',
         '/delete "Nome do Jogo"',
-        'Também aceito frases: "muda status de Katana Zero para Zerei" ou "nota de Spider-Man Remastered para 9.5".',
+        'Também aceito frases: "muda status de Katana Zero para Zerei", "nota de Spider-Man Remastered para 9.5" ou "muda plataforma de Katana Zero para SWITCH".',
       ].join('\n'),
+    }
+  }
+
+  if (trimmed.startsWith('/plataforma ')) {
+    const match = trimmed.match(/^\/plataforma\s+"([^"]+)"\s+(.+)$/i)
+      ?? trimmed.match(/^\/plataforma\s+(.+?)\s+(.+)$/i)
+
+    if (!match) {
+      return { reply: 'Formato inválido. Use: /plataforma "Nome do Jogo" SWITCH' }
+    }
+
+    const nome = match[1]
+    const plataforma = match[2].trim().toUpperCase()
+
+    if (!plataforma) return { reply: 'Plataforma inválida.' }
+
+    const alvo = await findGameByName(supabase, jogos, nome)
+    if (!alvo) return { reply: `Não encontrei o jogo "${nome}".` }
+
+    const { data, error } = await supabase
+      .from('jogos')
+      .update({ plataforma })
+      .eq('id', alvo.id)
+      .select('*')
+      .single()
+
+    if (error) return { reply: `Erro ao atualizar plataforma: ${error.message}` }
+
+    return {
+      reply: `Plataforma de "${data.nome_do_jogo}" atualizada para ${data.plataforma}.`,
+      mutation: { type: 'update', jogo: data as Jogo },
     }
   }
 
@@ -280,6 +325,100 @@ async function handleCommandAction(
     return handleCommandAction(`/delete "${deleteNatural[2]}"`, jogos)
   }
 
+  const plataformaNatural = trimmed.match(/plataforma\s+de\s+(.+?)\s+para\s+(.+)/i)
+  if (plataformaNatural) {
+    return handleCommandAction(`/plataforma "${plataformaNatural[1]}" ${plataformaNatural[2]}`, jogos)
+  }
+
+  const cadastraPlataformaNatural = trimmed.match(/(cadastra|adiciona|define)\s+(a\s+)?plataforma\s+(.+?)\s+(no|para\s+o)\s+jogo\s+(.+)/i)
+  if (cadastraPlataformaNatural) {
+    return handleCommandAction(`/plataforma "${cadastraPlataformaNatural[5]}" ${cadastraPlataformaNatural[3]}`, jogos)
+  }
+
+  return null
+}
+
+async function tryExtractActionWithAI(
+  apiKey: string,
+  model: string,
+  input: string,
+  jogos: Jogo[]
+): Promise<ExtractedAction | null> {
+  const prompt = [
+    'Extraia ação de catálogo de jogos em JSON.',
+    'Ações possíveis: none, add, status, nota, delete, plataforma.',
+    'Campos: nome, status, nota, plataforma, genero, valor, inicio, fim, capa.',
+    'Se não houver ação clara, retorne {"action":"none"}.',
+    'Responda somente JSON puro.',
+    `Mensagem do usuário: ${input}`,
+    `Nomes de jogos existentes: ${jogos.map((j) => j.nome_do_jogo).join(' | ')}`,
+  ].join('\n')
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0,
+      messages: [
+        { role: 'system', content: 'Você extrai intenção para automações e responde em JSON.' },
+        { role: 'user', content: prompt },
+      ],
+    }),
+  })
+
+  if (!response.ok) return null
+  const data = await response.json()
+  const raw = data?.choices?.[0]?.message?.content?.trim()
+  if (!raw) return null
+
+  try {
+    const parsed = JSON.parse(raw) as ExtractedAction
+    if (!parsed?.action) return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+function actionToCommand(action: ExtractedAction): string | null {
+  if (!action || action.action === 'none') return null
+
+  if (action.action === 'status' && action.nome && action.status) {
+    return `/status "${action.nome}" ${action.status}`
+  }
+
+  if (action.action === 'nota' && action.nome && typeof action.nota === 'number') {
+    return `/nota "${action.nome}" ${action.nota}`
+  }
+
+  if (action.action === 'delete' && action.nome) {
+    return `/delete "${action.nome}"`
+  }
+
+  if (action.action === 'plataforma' && action.nome && action.plataforma) {
+    return `/plataforma "${action.nome}" ${action.plataforma}`
+  }
+
+  if (action.action === 'add' && action.nome) {
+    const parts = [
+      `/add nome="${action.nome}"`,
+      action.plataforma ? `plataforma="${action.plataforma}"` : '',
+      action.status ? `status="${action.status}"` : '',
+      action.genero ? `genero="${action.genero}"` : '',
+      typeof action.nota === 'number' ? `nota=${action.nota}` : '',
+      typeof action.valor === 'number' ? `valor=${action.valor}` : '',
+      action.inicio ? `inicio=${action.inicio}` : '',
+      action.fim ? `fim=${action.fim}` : '',
+      action.capa ? `capa="${action.capa}"` : '',
+    ].filter(Boolean)
+
+    return parts.join(' ')
+  }
+
   return null
 }
 
@@ -359,11 +498,26 @@ export async function POST(req: NextRequest) {
     }
 
     const apiKey = process.env.OPENAI_API_KEY
+    const model = process.env.OPENAI_MODEL ?? 'gpt-4o-mini'
+
+    if (apiKey) {
+      const extracted = await tryExtractActionWithAI(apiKey, model, userInput, jogos)
+      const commandFromAI = extracted ? actionToCommand(extracted) : null
+      if (commandFromAI) {
+        const aiActionResult = await handleCommandAction(commandFromAI, jogos)
+        if (aiActionResult) {
+          return NextResponse.json({
+            reply: `${aiActionResult.reply} (ação interpretada automaticamente)`,
+            mutation: aiActionResult.mutation,
+            mode: 'ai-action',
+          })
+        }
+      }
+    }
+
     if (!apiKey) {
       return NextResponse.json({ reply: fallbackAnswer(messages, jogos), mode: 'fallback' })
     }
-
-    const model = process.env.OPENAI_MODEL ?? 'gpt-4o-mini'
 
     const resumo = buildResumo(jogos)
     const jogosCompactos = jogos.slice(0, 40).map((j) => ({

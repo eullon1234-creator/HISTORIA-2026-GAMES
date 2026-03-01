@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import type { Jogo, NovoJogo, StatusJogo, Plataforma } from '@/types/jogo'
+import type { Jogo, NovoJogo, StatusJogo } from '@/types/jogo'
 import { inserirJogo, atualizarJogo, deletarJogo } from '@/services/jogos'
 
-const PLATAFORMAS: Plataforma[] = ['STEAM', 'STEAM TOOLS', 'HYDRA', 'GAME PASS', 'PS5', 'PS4', 'EPIC', 'GOG', 'OUTRO']
+const PLATAFORMAS = ['STEAM', 'STEAM TOOLS', 'HYDRA', 'GAME PASS', 'PS5', 'PS4', 'EPIC', 'GOG', 'OUTRO']
 const STATUS_OPTIONS: StatusJogo[] = ['Jogando', 'Zerei', 'Pausa', 'Desisti', 'Querendo...']
 const PLACEHOLDER_IMG = 'https://placehold.co/300x420/1e1b4b/a78bfa?text=Sem+Capa'
 
@@ -188,15 +188,19 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Plataforma</label>
-              <select
+              <input
+                type="text"
+                list="plataformas-sugeridas"
                 value={form.plataforma}
-                onChange={(e) => set('plataforma', e.target.value as Plataforma)}
+                onChange={(e) => set('plataforma', e.target.value.toUpperCase())}
+                placeholder="Ex: STEAM, HYDRA, SWITCH, RETROARCH..."
                 className={inputClass}
-              >
+              />
+              <datalist id="plataformas-sugeridas">
                 {PLATAFORMAS.map((p) => (
-                  <option key={p} value={p}>{p}</option>
+                  <option key={p} value={p} />
                 ))}
-              </select>
+              </datalist>
             </div>
             <div>
               <label className={labelClass}>Gênero</label>
