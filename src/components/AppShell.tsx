@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import type { Jogo } from '@/types/jogo'
 import { Dashboard } from './Dashboard'
 import { GameForm } from './GameForm'
+import { AIAssistant } from './AIAssistant'
 
 interface Props {
   jogosList: Jogo[]
@@ -56,6 +57,8 @@ export function AppShell({ jogosList }: Props) {
           onFechar={() => setModalAberto(false)}
         />
       )}
+
+      <AIAssistant jogos={jogos} />
     </>
   )
 }
