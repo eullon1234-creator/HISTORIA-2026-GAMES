@@ -36,8 +36,8 @@ Catálogo pessoal de jogos estilo Netflix/Steam — substituto moderno de planil
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/SEU_USER/historia-2026-games.git
-cd historia-2026-games
+git clone https://github.com/eullon1234-creator/HISTORIA-2026-GAMES.git
+cd HISTORIA-2026-GAMES
 
 # 2. Instale as dependências
 npm install
