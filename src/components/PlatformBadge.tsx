@@ -2,6 +2,7 @@ import type { Plataforma } from '@/types/jogo'
 
 const config: Record<string, { label: string; color: string }> = {
   'STEAM':     { label: 'Steam',     color: 'bg-slate-700 text-slate-200' },
+  'STEAM TOOLS': { label: 'Steam Tools', color: 'bg-indigo-900 text-indigo-300' },
   'HYDRA':     { label: 'Hydra',     color: 'bg-cyan-900 text-cyan-300' },
   'GAME PASS': { label: 'Game Pass', color: 'bg-green-900 text-green-300' },
   'PS5':       { label: 'PS5',       color: 'bg-blue-900 text-blue-300' },

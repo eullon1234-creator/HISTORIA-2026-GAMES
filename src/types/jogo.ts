@@ -1,4 +1,4 @@
-export type Plataforma = 'STEAM' | 'HYDRA' | 'GAME PASS' | 'PS5' | 'PS4' | 'EPIC' | 'GOG' | 'OUTRO'
+export type Plataforma = 'STEAM' | 'STEAM TOOLS' | 'HYDRA' | 'GAME PASS' | 'PS5' | 'PS4' | 'EPIC' | 'GOG' | 'OUTRO'
 
 export type StatusJogo =
   | 'Zerei'

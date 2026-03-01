@@ -5,7 +5,7 @@ import Image from 'next/image'
 import type { Jogo, NovoJogo, StatusJogo, Plataforma } from '@/types/jogo'
 import { inserirJogo, atualizarJogo, deletarJogo } from '@/services/jogos'
 
-const PLATAFORMAS: Plataforma[] = ['STEAM', 'HYDRA', 'GAME PASS', 'PS5', 'PS4', 'EPIC', 'GOG', 'OUTRO']
+const PLATAFORMAS: Plataforma[] = ['STEAM', 'STEAM TOOLS', 'HYDRA', 'GAME PASS', 'PS5', 'PS4', 'EPIC', 'GOG', 'OUTRO']
 const STATUS_OPTIONS: StatusJogo[] = ['Jogando', 'Zerei', 'Pausa', 'Desisti', 'Querendo...']
 const PLACEHOLDER_IMG = 'https://placehold.co/300x420/1e1b4b/a78bfa?text=Sem+Capa'
 

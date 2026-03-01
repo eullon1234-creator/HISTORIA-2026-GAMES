@@ -12,6 +12,13 @@ interface Props {
   onEdit?: (jogo: Jogo) => void
 }
 
+function formatDateBr(value: string | null): string {
+  if (!value) return '—'
+  const [year, month, day] = value.split('-')
+  if (!year || !month || !day) return '—'
+  return `${day}/${month}/${year}`
+}
+
 export function GameCard({ jogo, onEdit }: Props) {
   const nota = jogo.nota_pessoal !== null && jogo.nota_pessoal !== undefined
 
@@ -69,6 +76,11 @@ export function GameCard({ jogo, onEdit }: Props) {
           {jogo.genero && (
             <span className="text-xs text-slate-500 truncate max-w-22.5">{jogo.genero}</span>
           )}
+        </div>
+
+        <div className="mt-1 grid grid-cols-2 gap-2 text-[11px] text-slate-400">
+          <span>Início: <strong className="text-slate-300">{formatDateBr(jogo.data_inicio)}</strong></span>
+          <span>Fim: <strong className="text-slate-300">{formatDateBr(jogo.data_finalizada)}</strong></span>
         </div>
       </div>
     </div>
