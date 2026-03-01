@@ -6,6 +6,10 @@ import type { Jogo } from '@/types/jogo'
 type Message = {
   role: 'user' | 'assistant'
   content: string
+  meta?: {
+    strategy?: 'fast' | 'smart'
+    model?: string
+  }
 }
 
 type BotMutation = {
@@ -114,7 +118,17 @@ export function AIAssistant({ jogos, onMutation }: Props) {
         onMutation(data.mutation as BotMutation)
       }
 
-      setMessages((prev) => [...prev, { role: 'assistant', content: reply }])
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: reply,
+          meta: {
+            strategy: data?.strategy,
+            model: data?.model,
+          },
+        },
+      ])
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -176,6 +190,13 @@ export function AIAssistant({ jogos, onMutation }: Props) {
                 }`}
               >
                 {msg.content}
+
+                {msg.role === 'assistant' && (msg.meta?.strategy || msg.meta?.model) && (
+                  <div className="mt-1 text-[10px] text-slate-400">
+                    {msg.meta?.strategy ? `modo: ${msg.meta.strategy}` : 'modo: n/a'}
+                    {msg.meta?.model ? ` • modelo: ${msg.meta.model}` : ''}
+                  </div>
+                )}
               </div>
             ))}
 
