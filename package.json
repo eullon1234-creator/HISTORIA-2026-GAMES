@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "supabase:ping": "node scripts/supabase-keepalive.mjs",
+    "supabase:keepalive": "node scripts/supabase-keepalive.mjs --loop --interval=360"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",

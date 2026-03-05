@@ -62,6 +62,18 @@ NEXT_PUBLIC_SUPABASE_URL=https://SEU_PROJECT_ID.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=SUA_ANON_KEY
 ```
 
+## 🔄 Keepalive do Supabase (plano gratuito)
+
+No plano gratuito, o Supabase pode pausar por inatividade. Para manter atividade, você pode usar:
+
+```bash
+# Faz 1 ping agora
+npm run supabase:ping
+
+# Mantém ping a cada 6 horas (enquanto o processo estiver rodando)
+npm run supabase:keepalive
+```
+
 ## Getting Started
 
 First, run the development server:
