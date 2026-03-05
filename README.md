@@ -74,6 +74,20 @@ npm run supabase:ping
 npm run supabase:keepalive
 ```
 
+## 🔐 Auth + RLS (segurança por usuário)
+
+O app agora exige login (e-mail/senha) e cada usuário só enxerga os próprios jogos.
+
+1. No Supabase, habilite `Email/Password` em **Authentication → Providers**.
+2. Execute novamente o SQL de [supabase/schema.sql](supabase/schema.sql) para aplicar as políticas RLS por `user_id`.
+3. Se você já tinha jogos antigos, atribua ao seu usuário:
+
+```sql
+update public.jogos
+set user_id = '<SEU_USER_ID>'
+where user_id is null;
+```
+
 ## Getting Started
 
 First, run the development server:
