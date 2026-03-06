@@ -12,6 +12,42 @@ interface Props {
   onEdit?: (jogo: Jogo) => void
 }
 
+const STATUS_THEME: Record<
+  Jogo['status'],
+  { topGlow: string; pillBorder: string; dateBorder: string; dateLabel: string }
+> = {
+  Jogando: {
+    topGlow: 'from-blue-500/30 via-cyan-400/10 to-transparent',
+    pillBorder: 'border-cyan-400/40 text-cyan-200',
+    dateBorder: 'border-cyan-500/30',
+    dateLabel: 'text-cyan-300/90',
+  },
+  Zerei: {
+    topGlow: 'from-emerald-500/30 via-green-400/10 to-transparent',
+    pillBorder: 'border-emerald-400/40 text-emerald-200',
+    dateBorder: 'border-emerald-500/30',
+    dateLabel: 'text-emerald-300/90',
+  },
+  Pausa: {
+    topGlow: 'from-yellow-500/30 via-amber-400/10 to-transparent',
+    pillBorder: 'border-yellow-400/40 text-yellow-200',
+    dateBorder: 'border-yellow-500/30',
+    dateLabel: 'text-yellow-300/90',
+  },
+  Desisti: {
+    topGlow: 'from-red-500/30 via-rose-400/10 to-transparent',
+    pillBorder: 'border-rose-400/40 text-rose-200',
+    dateBorder: 'border-rose-500/30',
+    dateLabel: 'text-rose-300/90',
+  },
+  'Querendo...': {
+    topGlow: 'from-fuchsia-500/30 via-purple-400/10 to-transparent',
+    pillBorder: 'border-fuchsia-400/40 text-fuchsia-200',
+    dateBorder: 'border-fuchsia-500/30',
+    dateLabel: 'text-fuchsia-300/90',
+  },
+}
+
 function formatNota(value: number | null): string {
   if (value === null || value === undefined) return ''
   return Number.isInteger(value) ? String(value) : value.toFixed(1)
@@ -26,6 +62,7 @@ function formatDateBr(value: string | null): string {
 
 export function GameCard({ jogo, onEdit }: Props) {
   const nota = jogo.nota_pessoal !== null && jogo.nota_pessoal !== undefined
+  const theme = STATUS_THEME[jogo.status] ?? STATUS_THEME['Querendo...']
 
   return (
     <div
@@ -33,7 +70,7 @@ export function GameCard({ jogo, onEdit }: Props) {
                  bg-[#13132a] border border-white/5
                  shadow-lg shadow-black/40
                  transition-all duration-300
-                 hover:scale-[1.04] hover:border-purple-500/50 hover:shadow-purple-900/40 hover:shadow-xl"
+                 hover:scale-[1.03] hover:border-fuchsia-500/50 hover:shadow-fuchsia-900/40 hover:shadow-xl"
       onClick={() => onEdit?.(jogo)}
     >
       {/* Imagem de capa */}
@@ -51,23 +88,35 @@ export function GameCard({ jogo, onEdit }: Props) {
           }}
         />
 
+        <div className={`absolute inset-0 bg-linear-to-t ${theme.topGlow}`} />
+
+        <div className="absolute inset-x-0 top-0 px-2 py-2 bg-linear-to-b from-black/85 via-black/40 to-transparent">
+          <div className="flex items-start justify-between gap-2">
+            <PlatformBadge plataforma={jogo.plataforma} />
+
+            {nota && (
+              <div className="flex items-center justify-center min-w-9 h-9 px-2 rounded-full bg-black/70 backdrop-blur-sm border border-fuchsia-400/50 text-sm font-bold text-fuchsia-200">
+                {formatNota(jogo.nota_pessoal)}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Overlay gradiente no hover */}
-        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent
+        <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/20 to-transparent
                         opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        {/* Nota — canto superior direito */}
-        {nota && (
-          <div className="absolute top-2 right-2 flex items-center justify-center
-                          min-w-9 h-9 px-2 rounded-full bg-black/70 backdrop-blur-sm
-                          border border-purple-500/50 text-sm font-bold text-purple-300">
-            {formatNota(jogo.nota_pessoal)}
+        <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span className={`inline-flex items-center px-2 py-1 rounded-md text-[11px] font-semibold bg-black/60 border uppercase tracking-wide ${theme.pillBorder}`}>
+            Abrir detalhes
+          </span>
+        </div>
+
+        {jogo.genero && (
+          <div className="absolute bottom-2 left-2 max-w-[75%] rounded-md bg-black/55 border border-white/15 px-2 py-1 text-[10px] text-slate-200 backdrop-blur-sm truncate">
+            {jogo.genero}
           </div>
         )}
-
-        {/* Plataforma — canto superior esquerdo */}
-        <div className="absolute top-2 left-2">
-          <PlatformBadge plataforma={jogo.plataforma} />
-        </div>
       </div>
 
       {/* Informações abaixo da capa */}
@@ -78,14 +127,18 @@ export function GameCard({ jogo, onEdit }: Props) {
 
         <div className="flex items-center justify-between flex-wrap gap-1">
           <StatusBadge status={jogo.status} />
-          {jogo.genero && (
-            <span className="text-xs text-slate-500 truncate max-w-22.5">{jogo.genero}</span>
-          )}
         </div>
 
-        <div className="mt-1 grid grid-cols-2 gap-2 text-[11px] text-slate-400">
-          <span>Início: <strong className="text-slate-300">{formatDateBr(jogo.data_inicio)}</strong></span>
-          <span>Fim: <strong className="text-slate-300">{formatDateBr(jogo.data_finalizada)}</strong></span>
+        <div className="mt-1 space-y-1.5 text-[11px]">
+          <div className={`flex items-center justify-between rounded-md border bg-white/5 px-2 py-1.5 ${theme.dateBorder}`}>
+            <span className={`inline-flex items-center gap-1 ${theme.dateLabel}`}>🟣 Início</span>
+            <strong className="text-slate-200 font-semibold">{formatDateBr(jogo.data_inicio)}</strong>
+          </div>
+
+          <div className={`flex items-center justify-between rounded-md border bg-white/5 px-2 py-1.5 ${theme.dateBorder}`}>
+            <span className={`inline-flex items-center gap-1 ${theme.dateLabel}`}>✅ Fim</span>
+            <strong className="text-slate-200 font-semibold">{formatDateBr(jogo.data_finalizada)}</strong>
+          </div>
         </div>
       </div>
     </div>
