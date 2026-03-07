@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const isGithubPages = process.env.NODE_ENV === 'production';
 const repoName = 'HISTORIA-2026-GAMES';
 
-const nextConfig: NextConfig = {
+const nextConfig: any = {
   output: 'export',
   eslint: {
     ignoreDuringBuilds: true,
