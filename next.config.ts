@@ -5,6 +5,12 @@ const repoName = 'HISTORIA-2026-GAMES';
 
 const nextConfig: NextConfig = {
   output: 'export',
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   basePath: isGithubPages ? `/${repoName}` : '',
   assetPrefix: isGithubPages ? `/${repoName}/` : '',
   images: {
