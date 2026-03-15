@@ -8,8 +8,10 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Supabase JS CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Firebase SDKs (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 
   <style>
     /* ─── Global ─── */
@@ -242,11 +244,18 @@
 <body>
 
 <!-- ══════════════════════════════════════════════
-     CONFIG  (edite aqui suas credenciais Supabase)
+     CONFIG  (cole aqui suas credenciais Firebase)
      ══════════════════════════════════════════════ -->
 <script>
-  const SUPABASE_URL  = 'COLE_SUA_SUPABASE_URL_AQUI'
-  const SUPABASE_ANON = 'COLE_SUA_SUPABASE_ANON_KEY_AQUI'
+  const firebaseConfig = {
+    apiKey:            'AIzaSyBFT-w8XVq7w9N7WlOIsWXSI15bM2T1HiM',
+    authDomain:        'game-historia-2026.firebaseapp.com',
+    projectId:         'game-historia-2026',
+    storageBucket:     'game-historia-2026.firebasestorage.app',
+    messagingSenderId: '285111086961',
+    appId:             '1:285111086961:web:75c8de7d4ca1696f7650d0',
+    measurementId:     'G-4EEDWTGLYZ'
+  }
 </script>
 
 <!-- ══════════════════════════════
@@ -262,11 +271,8 @@
 <div id="screen-config" class="hidden min-h-screen flex items-center justify-center p-6">
   <div class="auth-card text-center">
     <p class="text-3xl mb-3">⚙️</p>
-    <h2 class="text-lg font-bold text-white mb-2">Supabase não configurado</h2>
-    <p class="text-sm text-slate-400">Edite as constantes <code class="text-fuchsia-400">SUPABASE_URL</code> e <code class="text-fuchsia-400">SUPABASE_ANON</code> no início do arquivo HTML.</p>
-  </div>
-</div>
-
+    <h2 class="text-lg font-bold text-white mb-2">Firebase não configurado</h2>
+    <p class="text-sm text-slate-400">Edite o objeto <code class="text-fuchsia-400">firebaseConfig</code> no início do arquivo HTML com os dados do seu projeto Firebase.</p>
 <!-- Tela de Login -->
 <div id="screen-auth" class="hidden min-h-screen flex items-center justify-center p-4">
   <div class="auth-card">
@@ -522,14 +528,13 @@
 <script>
 'use strict'
 
-// ── Supabase init ──────────────────────────────────────────
-let sb = null
+// ── Firebase init ──────────────────────────────────────────
+let auth = null
+let db   = null
+let currentUser = null
 
 function isConfigured() {
-  return SUPABASE_URL &&
-         SUPABASE_ANON &&
-         !SUPABASE_URL.includes('COLE_') &&
-         !SUPABASE_ANON.includes('COLE_')
+  return firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('COLE_')
 }
 
 // ── Estado global ──────────────────────────────────────────
@@ -537,13 +542,13 @@ const PLACEHOLDER_IMG = 'https://placehold.co/300x420/1e1b4b/a78bfa?text=Sem+Cap
 const STATUS_LIST = ['Jogando', 'Zerei', 'Pausa', 'Desisti', 'Querendo...']
 const PAGE_SIZE = 24
 
-let allJogos = []         // todos os jogos carregados
+let allJogos = []
 let filtroStatus = 'Todos'
 let filtroPesquisa = ''
 let ordenacao = 'recentes'
 let currentPage = 1
-let jogoEditandoId = null  // id do jogo em edição (null = novo)
-let notaAtual = null       // null = sem nota
+let jogoEditandoId = null
+let notaAtual = null
 let statusSelecionado = 'Querendo...'
 let loadingForm = false
 let confirmDeleteAtivo = false
@@ -561,7 +566,7 @@ function lsSet(key, val) {
 }
 
 // ── Init ───────────────────────────────────────────────────
-async function init() {
+function init() {
   show('screen-loading')
 
   if (!isConfigured()) {
@@ -570,7 +575,9 @@ async function init() {
     return
   }
 
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+  firebase.initializeApp(firebaseConfig)
+  auth = firebase.auth()
+  db   = firebase.firestore()
 
   // Restaurar filtros do localStorage
   const savedStatus = lsGet(LS_STATUS, 'Todos')
@@ -580,27 +587,19 @@ async function init() {
   const savedOrd = lsGet(LS_ORDENACAO, 'recentes')
   ordenacao      = ['recentes','nome-asc','nota-desc','status'].includes(savedOrd) ? savedOrd : 'recentes'
 
-  // Aplicar filtros na UI
   document.getElementById('nav-busca').value = filtroPesquisa
   document.getElementById('nav-ordem').value = ordenacao
   setFiltroChipUI(filtroStatus)
 
-  const { data: { session } } = await sb.auth.getSession()
-
-  if (!session) {
+  // Firebase já dispara com o estado atual na inicialização
+  auth.onAuthStateChanged(user => {
     hide('screen-loading')
-    show('screen-auth')
-  } else {
-    hide('screen-loading')
-    show('screen-main')
-    await carregarJogos()
-  }
-
-  sb.auth.onAuthStateChange((_event, session) => {
-    if (session) {
+    if (user) {
+      currentUser = user
       showDashboard()
       carregarJogos()
     } else {
+      currentUser = null
       allJogos = []
       esconderTelas()
       show('screen-auth')
@@ -630,9 +629,12 @@ async function handleEntrar() {
 
   setAuthLoading(true)
   hideAuthErro()
-  const { error } = await sb.auth.signInWithPassword({ email, password: senha })
-  if (error) showAuthErro(error.message)
-  setAuthLoading(false)
+  try {
+    await auth.signInWithEmailAndPassword(email, senha)
+  } catch (err) {
+    showAuthErro(traduzirErroFirebase(err.code))
+    setAuthLoading(false)
+  }
 }
 
 async function handleCriarConta() {
@@ -643,17 +645,30 @@ async function handleCriarConta() {
 
   setAuthLoading(true)
   hideAuthErro()
-  const { error } = await sb.auth.signUp({ email, password: senha })
-  if (error) showAuthErro(error.message)
-  else showAuthErro('Conta criada. Se a confirmação por e-mail estiver ativa, confirme antes de entrar.')
-  setAuthLoading(false)
+  try {
+    await auth.createUserWithEmailAndPassword(email, senha)
+    // onAuthStateChanged vai redirecionar automaticamente ao dashboard
+  } catch (err) {
+    showAuthErro(traduzirErroFirebase(err.code))
+    setAuthLoading(false)
+  }
 }
 
 async function handleSair() {
-  await sb.auth.signOut()
-  allJogos = []
-  esconderTelas()
-  show('screen-auth')
+  await auth.signOut()
+}
+
+function traduzirErroFirebase(code) {
+  const msgs = {
+    'auth/user-not-found':       'Usuário não encontrado.',
+    'auth/wrong-password':       'Senha incorreta.',
+    'auth/invalid-email':        'E-mail inválido.',
+    'auth/email-already-in-use': 'E-mail já cadastrado.',
+    'auth/weak-password':        'Senha deve ter ao menos 6 caracteres.',
+    'auth/invalid-credential':   'E-mail ou senha incorretos.',
+    'auth/too-many-requests':    'Muitas tentativas. Tente novamente mais tarde.',
+  }
+  return msgs[code] || 'Erro de autenticação. Tente novamente.'
 }
 
 function showAuthErro(msg) {
@@ -667,14 +682,15 @@ function setAuthLoading(v) {
   document.getElementById('btn-criar').disabled  = v
 }
 
-// ── Supabase CRUD ──────────────────────────────────────────
+// ── Firebase Firestore CRUD ────────────────────────────────
 async function carregarJogos() {
   show('dash-loading')
   hide('dash-erro')
   try {
-    const { data, error } = await sb.from('jogos').select('*').order('created_at', { ascending: false })
-    if (error) throw error
-    allJogos = data ?? []
+    const snap = await db.collection('jogos')
+      .where('user_id', '==', currentUser.uid)
+      .get()
+    allJogos = snap.docs.map(d => ({ id: d.id, ...d.data() }))
   } catch (err) {
     mostrarDashErro(err.message || 'Erro ao carregar jogos.')
     allJogos = []
@@ -685,20 +701,24 @@ async function carregarJogos() {
 }
 
 async function inserirJogo(dados) {
-  const { data, error } = await sb.from('jogos').insert([dados]).select().single()
-  if (error) throw new Error(error.message)
-  return data
+  const payload = {
+    ...dados,
+    user_id: currentUser.uid,
+    created_at: firebase.firestore.FieldValue.serverTimestamp()
+  }
+  const ref = await db.collection('jogos').add(payload)
+  return { id: ref.id, ...payload, created_at: new Date().toISOString() }
 }
 
 async function atualizarJogo(id, dados) {
-  const { data, error } = await sb.from('jogos').update(dados).eq('id', id).select().single()
-  if (error) throw new Error(error.message)
-  return data
+  await db.collection('jogos').doc(id).update(dados)
+  // Retorna o jogo atualizado mesclado com o existente
+  const existente = allJogos.find(j => j.id === id) || {}
+  return { ...existente, ...dados, id }
 }
 
 async function deletarJogo(id) {
-  const { error } = await sb.from('jogos').delete().eq('id', id)
-  if (error) throw new Error(error.message)
+  await db.collection('jogos').doc(id).delete()
 }
 
 function mostrarDashErro(msg) {
