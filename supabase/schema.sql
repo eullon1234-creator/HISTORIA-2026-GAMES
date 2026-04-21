@@ -9,6 +9,7 @@ create extension if not exists "pgcrypto";
 -- Tabela principal
 create table if not exists public.jogos (
   id              uuid          primary key default gen_random_uuid(),
+  user_id         uuid          null,
   nome_do_jogo    text          not null,
   plataforma      text          not null,
   genero          text          not null default '',
@@ -22,6 +23,10 @@ create table if not exists public.jogos (
   created_at      timestamptz   not null default now()
 );
 
+-- Suporte para projetos já existentes
+alter table public.jogos add column if not exists user_id uuid;
+alter table public.jogos alter column user_id set default auth.uid();
+
 -- Restrição: status só aceita valores válidos
 alter table public.jogos
   add constraint jogos_status_check
@@ -32,6 +37,7 @@ create index if not exists jogos_nome_idx on public.jogos (nome_do_jogo);
 
 -- Índice para filtros por status
 create index if not exists jogos_status_idx on public.jogos (status);
+create index if not exists jogos_user_id_idx on public.jogos (user_id);
 
 -- ============================================================
 --  Row Level Security (RLS)
@@ -41,25 +47,27 @@ create index if not exists jogos_status_idx on public.jogos (status);
 
 alter table public.jogos enable row level security;
 
--- Política: leitura pública (anon pode listar os jogos)
-create policy "Leitura pública de jogos"
+drop policy if exists "Leitura pública de jogos" on public.jogos;
+drop policy if exists "Inserção pública de jogos" on public.jogos;
+drop policy if exists "Atualização pública de jogos" on public.jogos;
+drop policy if exists "Exclusão pública de jogos" on public.jogos;
+
+create policy "Leitura do próprio usuário"
   on public.jogos for select
-  using (true);
+  using (auth.uid() is not null and auth.uid() = user_id);
 
--- Política: inserção pública (ajuste para seu caso de uso)
-create policy "Inserção pública de jogos"
+create policy "Inserção do próprio usuário"
   on public.jogos for insert
-  with check (true);
+  with check (auth.uid() is not null and auth.uid() = user_id);
 
--- Política: atualização pública
-create policy "Atualização pública de jogos"
+create policy "Atualização do próprio usuário"
   on public.jogos for update
-  using (true);
+  using (auth.uid() is not null and auth.uid() = user_id)
+  with check (auth.uid() is not null and auth.uid() = user_id);
 
--- Política: exclusão pública
-create policy "Exclusão pública de jogos"
+create policy "Exclusão do próprio usuário"
   on public.jogos for delete
-  using (true);
+  using (auth.uid() is not null and auth.uid() = user_id);
 
 -- ============================================================
 --  Dados de exemplo para testar o layout (opcional)

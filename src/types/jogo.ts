@@ -9,6 +9,7 @@ export type StatusJogo =
 
 export interface Jogo {
   id: string
+  user_id?: string
   nome_do_jogo: string
   plataforma: Plataforma
   genero: string
@@ -21,4 +22,4 @@ export interface Jogo {
   created_at?: string
 }
 
-export type NovoJogo = Omit<Jogo, 'id' | 'created_at'>
+export type NovoJogo = Omit<Jogo, 'id' | 'created_at' | 'user_id'>

@@ -1,15 +1,19 @@
+SITE AQUI https://historia-2026-games-deploy-temp.vercel.app/
+
+
+
 # 🎮 Historia 2026 Games
 
 Catálogo pessoal de jogos estilo Netflix/Steam — substituto moderno de planilha de gerenciamento.
 
-[![Deploy on Vercel](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel)](https://vercel.com)
+[![Deploy on Netlify](https://img.shields.io/badge/Deploy-Netlify-00C7B7?logo=netlify&logoColor=white)](https://netlify.com)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![Supabase](https://img.shields.io/badge/Supabase-Database-green?logo=supabase)](https://supabase.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://typescriptlang.org)
 
 ## 🚀 Demo ao Vivo
 
-> **[▶ Abrir o App](https://historia-2026-games.vercel.app)**
+> **[▶ Publicado no Netlify](https://app.netlify.com/)**
 
 ---
 
@@ -62,6 +66,32 @@ NEXT_PUBLIC_SUPABASE_URL=https://SEU_PROJECT_ID.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=SUA_ANON_KEY
 ```
 
+## 🔄 Keepalive do Supabase (plano gratuito)
+
+No plano gratuito, o Supabase pode pausar por inatividade. Para manter atividade, você pode usar:
+
+```bash
+# Faz 1 ping agora
+npm run supabase:ping
+
+# Mantém ping a cada 6 horas (enquanto o processo estiver rodando)
+npm run supabase:keepalive
+```
+
+## 🔐 Auth + RLS (segurança por usuário)
+
+O app agora exige login (e-mail/senha) e cada usuário só enxerga os próprios jogos.
+
+1. No Supabase, habilite `Email/Password` em **Authentication → Providers**.
+2. Execute novamente o SQL de [supabase/schema.sql](supabase/schema.sql) para aplicar as políticas RLS por `user_id`.
+3. Se você já tinha jogos antigos, atribua ao seu usuário:
+
+```sql
+update public.jogos
+set user_id = '<SEU_USER_ID>'
+where user_id is null;
+```
+
 ## Getting Started
 
 First, run the development server:
@@ -80,8 +110,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
@@ -89,10 +117,12 @@ To learn more about Next.js, take a look at the following resources:
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy no Netlify
 
-## Deploy on Vercel
+Este projeto já está preparado para Netlify com `netlify.toml` e plugin oficial do Next.js.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Conecte o repositório no Netlify.
+2. Em **Site configuration → Environment variables**, adicione:
+	- `NEXT_PUBLIC_SUPABASE_URL`
+	- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. Faça o deploy (o comando de build já é `npm run build`).
