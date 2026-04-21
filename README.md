@@ -1,3 +1,7 @@
+SITE AQUI https://historia-2026-games-deploy-temp.vercel.app/
+
+
+
 # 🎮 Historia 2026 Games
 
 Catálogo pessoal de jogos estilo Netflix/Steam — substituto moderno de planilha de gerenciamento.
