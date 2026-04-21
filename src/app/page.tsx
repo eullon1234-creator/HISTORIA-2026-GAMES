@@ -1,5 +1,5 @@
+import { buscarJogos } from '@/services/jogos'
 import { AppShell } from '@/components/AppShell'
-<<<<<<< HEAD
 import type { Jogo } from '@/types/jogo'
 
 export const revalidate = 0 // sempre busca dados frescos
@@ -150,9 +150,16 @@ const JOGOS_PLACEHOLDER: Jogo[] = [
     capa_url: 'https://upload.wikimedia.org/wikipedia/en/1/17/Katana_Zero_cover_art.jpg',
   },
 ]
-=======
->>>>>>> be609d2b091311418b95ce3de10281957cb08fbb
 
 export default async function HomePage() {
-  return <AppShell />
+  let jogos: Jogo[] = []
+
+  try {
+    jogos = await buscarJogos()
+  } catch {
+    // Se o Supabase ainda não estiver configurado, usa placeholders
+    jogos = JOGOS_PLACEHOLDER
+  }
+
+  return <AppShell jogosList={jogos} />
 }

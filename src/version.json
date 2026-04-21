@@ -1,5 +1,5 @@
 {
-  "version": "1.9",
+  "version": "1.10",
   "last_update": "2026-04-21",
-  "description": "Remoção da data finalizada e upgrade para UI Premium"
+  "description": "Correção de conflito de merge e restauração da HomePage"
 }
