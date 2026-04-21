@@ -17,7 +17,6 @@ const ESTADO_INICIAL: NovoJogo = {
   valor_pago: null,
   data_inicio: null,
   nota_pessoal: null,
-  data_finalizada: null,
   desistiu: false,
   capa_url: null,
 }
@@ -50,7 +49,6 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
         valor_pago: jogo.valor_pago,
         data_inicio: jogo.data_inicio,
         nota_pessoal: jogo.nota_pessoal,
-        data_finalizada: jogo.data_finalizada,
         desistiu: jogo.desistiu,
         capa_url: jogo.capa_url,
       })
@@ -118,53 +116,61 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300"
     >
       <div
         className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto
-                    bg-[#13132a] border border-white/10 rounded-2xl shadow-2xl shadow-black/60"
+                    bg-[#0a0a14] border border-white/10 rounded-3xl shadow-2xl shadow-purple-900/20"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-[#13132a] border-b border-white/10">
-          <h2 className="text-lg font-bold text-white">
-            {editando ? '✏️ Editar Jogo' : '🎮 Adicionar Novo Jogo'}
-          </h2>
+        <div className="sticky top-0 z-10 flex items-center justify-between px-8 py-6 bg-[#0a0a14]/80 backdrop-blur-md border-b border-white/5">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 rounded-lg bg-purple-600/20 flex items-center justify-center text-purple-400 border border-purple-500/20">
+                {editando ? '✏️' : '🎮'}
+             </div>
+             <h2 className="text-xl font-black text-white tracking-tight uppercase">
+               {editando ? 'Editar Jogo' : 'Novo Jogo'}
+             </h2>
+          </div>
           <button
             onClick={onFechar}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400
-                       hover:text-white hover:bg-white/10 transition-colors text-xl leading-none"
+            className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-500
+                       hover:text-white hover:bg-white/5 transition-all text-2xl leading-none"
           >
             ×
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-5">
-          {/* Preview da capa */}
-          <div className="flex gap-5 items-start">
-            <div className="relative shrink-0 w-28 h-40 rounded-xl overflow-hidden border border-white/10 bg-[#1e1b4b]">
+        <form onSubmit={handleSubmit} className="px-8 py-8 flex flex-col gap-8">
+          {/* Preview da capa + Infos Básicas */}
+          <div className="flex flex-col md:flex-row gap-8 items-start">
+            <div className="relative shrink-0 w-full md:w-44 aspect-2/3 rounded-2xl overflow-hidden border border-white/10 bg-white/5 group shadow-2xl shadow-black">
               <Image
                 src={previewUrl || PLACEHOLDER_IMG}
                 alt="Preview da capa"
                 fill
-                sizes="112px"
-                className="object-cover"
+                className="object-cover transition-transform group-hover:scale-105"
                 unoptimized
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_IMG
                 }}
               />
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+              <div className="absolute bottom-2 left-2 right-2 text-[10px] text-center text-white/40 font-bold uppercase tracking-widest">
+                 Preview da Capa
+              </div>
             </div>
 
-            <div className="flex-1 flex flex-col gap-3">
+            <div className="flex-1 w-full flex flex-col gap-5">
               {/* Nome */}
               <div>
-                <label className={labelClass}>Nome do Jogo *</label>
+                <label className={labelClass}>Nome da Obra-Prima</label>
                 <input
                   type="text"
                   value={form.nome_do_jogo}
                   onChange={(e) => set('nome_do_jogo', e.target.value)}
-                  placeholder="Ex: God of War Ragnarök"
+                  placeholder="Ex: Elden Ring"
                   className={inputClass}
                   required
                 />
@@ -172,28 +178,30 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
 
               {/* URL da capa */}
               <div>
-                <label className={labelClass}>URL da Capa</label>
+                <label className={labelClass}>Link da Arte (URL)</label>
                 <input
                   type="url"
                   value={form.capa_url || ''}
                   onChange={(e) => set('capa_url', e.target.value || null)}
-                  placeholder="https://exemplo.com/capa.jpg"
+                  placeholder="https://..."
                   className={inputClass}
                 />
               </div>
             </div>
           </div>
 
+          <div className="h-px bg-white/5 w-full" />
+
           {/* Plataforma + Gênero */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Plataforma</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="relative">
+              <label className={labelClass}>Plataforma de Destino</label>
               <input
                 type="text"
                 list="plataformas-sugeridas"
                 value={form.plataforma}
                 onChange={(e) => set('plataforma', e.target.value.toUpperCase())}
-                placeholder="Ex: STEAM, HYDRA, SWITCH, RETROARCH..."
+                placeholder="STEAM, PS5..."
                 className={inputClass}
               />
               <datalist id="plataformas-sugeridas">
@@ -203,12 +211,12 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
               </datalist>
             </div>
             <div>
-              <label className={labelClass}>Gênero</label>
+              <label className={labelClass}>Gênero / Estilo</label>
               <input
                 type="text"
                 value={form.genero}
                 onChange={(e) => set('genero', e.target.value)}
-                placeholder="Ex: RPG, Ação, Aventura..."
+                placeholder="RPG, Ação..."
                 className={inputClass}
               />
             </div>
@@ -216,17 +224,17 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
 
           {/* Status */}
           <div>
-            <label className={labelClass}>Status</label>
-            <div className="flex flex-wrap gap-2">
+            <label className={labelClass}>Progresso Atual</label>
+            <div className="flex flex-wrap gap-2.5 p-2 rounded-2xl bg-white/[0.02] border border-white/5">
               {STATUS_OPTIONS.map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => set('status', s)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition-all ${
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     form.status === s
-                      ? 'bg-purple-600 border-purple-500 text-white'
-                      : 'bg-transparent border-white/15 text-slate-400 hover:border-white/30 hover:text-slate-200'
+                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40 scale-105'
+                      : 'bg-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
                   }`}
                 >
                   {s}
@@ -236,148 +244,137 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
           </div>
 
           {/* Nota + Valor */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>
-                Nota Pessoal
-                <span className="ml-1 text-slate-500 font-normal">(0–10)</span>
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="range"
-                  min={0}
-                  max={10}
-                  step={0.5}
-                  value={form.nota_pessoal ?? 0}
-                  onChange={(e) => set('nota_pessoal', e.target.value === '' ? null : Number(e.target.value))}
-                  className="flex-1 accent-purple-500"
-                />
-                <span className="w-8 text-center text-sm font-bold text-purple-300">
-                  {form.nota_pessoal ?? '–'}
-                </span>
-                {form.nota_pessoal !== null && (
-                  <button
-                    type="button"
-                    onClick={() => set('nota_pessoal', null)}
-                    className="text-xs text-slate-500 hover:text-slate-300"
-                  >
-                    limpar
-                  </button>
-                )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="glass p-5 rounded-2xl border-white/5">
+              <div className="flex items-center justify-between mb-4">
+                <label className={labelClass + ' mb-0'}>Sua Nota</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-black text-purple-400">
+                    {form.nota_pessoal ?? '—'}
+                  </span>
+                  {form.nota_pessoal !== null && (
+                    <button
+                      type="button"
+                      onClick={() => set('nota_pessoal', null)}
+                      className="text-[10px] text-slate-600 hover:text-slate-400 font-bold uppercase tracking-widest"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
               </div>
+              <input
+                type="range"
+                min={0}
+                max={10}
+                step={0.5}
+                value={form.nota_pessoal ?? 0}
+                onChange={(e) => set('nota_pessoal', e.target.value === '' ? null : Number(e.target.value))}
+                className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500"
+              />
             </div>
 
-            <div>
-              <label className={labelClass}>Valor Pago (R$)</label>
-              <input
-                type="number"
-                min={0}
-                step={0.01}
-                value={form.valor_pago ?? ''}
-                onChange={(e) => set('valor_pago', e.target.value === '' ? null : Number(e.target.value))}
-                placeholder="0,00"
-                className={inputClass}
-              />
+            <div className="glass p-5 rounded-2xl border-white/5">
+              <label className={labelClass}>Investimento (R$)</label>
+              <div className="relative">
+                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 font-bold">R$</span>
+                 <input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={form.valor_pago ?? ''}
+                    onChange={(e) => set('valor_pago', e.target.value === '' ? null : Number(e.target.value))}
+                    placeholder="0,00"
+                    className={inputClass + ' pl-10'}
+                  />
+              </div>
             </div>
           </div>
 
           {/* Datas */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Data de Início</label>
-              <input
-                type="date"
-                value={form.data_inicio || ''}
-                onChange={(e) => set('data_inicio', e.target.value || null)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Data Finalizada</label>
-              <input
-                type="date"
-                value={form.data_finalizada || ''}
-                onChange={(e) => set('data_finalizada', e.target.value || null)}
-                className={inputClass}
-                disabled={form.status !== 'Zerei'}
-              />
-              {form.status !== 'Zerei' && (
-                <p className="text-xs text-slate-600 mt-1">Disponível somente com status &quot;Zerei&quot;</p>
-              )}
-            </div>
+          <div className="glass p-5 rounded-2xl border-white/5">
+            <label className={labelClass}>Início da Jornada</label>
+            <input
+              type="date"
+              value={form.data_inicio || ''}
+              onChange={(e) => set('data_inicio', e.target.value || null)}
+              className={inputClass}
+            />
           </div>
 
           {/* Erro */}
           {erro && (
-            <div className="px-4 py-3 rounded-lg bg-red-900/40 border border-red-500/40 text-red-300 text-sm">
+            <div className="px-6 py-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-bold animate-pulse">
               ⚠️ {erro}
             </div>
           )}
 
           {/* Ações */}
-          <div className="flex items-center justify-between pt-2 border-t border-white/10">
+          <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-6 pt-4 border-t border-white/5">
             {/* Deletar */}
-            {editando && (
-              <div className="flex items-center gap-2">
+            {editando ? (
+              <div className="flex items-center gap-3">
                 {!confirmDelete ? (
                   <button
                     type="button"
                     onClick={() => setConfirmDelete(true)}
-                    className="px-3 py-1.5 rounded-lg text-sm text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-colors"
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-red-500 hover:bg-red-500/10 transition-colors uppercase tracking-widest"
                   >
-                    Excluir jogo
+                    Excluir da História
                   </button>
                 ) : (
-                  <>
-                    <span className="text-xs text-red-400">Tem certeza?</span>
+                  <div className="flex items-center gap-2 bg-red-500/10 p-2 rounded-2xl border border-red-500/20">
+                    <span className="text-[10px] text-red-400 font-bold uppercase tracking-widest px-2">Tem certeza?</span>
                     <button
                       type="button"
                       onClick={handleDeletar}
                       disabled={loading}
-                      className="px-3 py-1.5 rounded-lg bg-red-700 hover:bg-red-600 text-white text-sm font-semibold transition-colors disabled:opacity-50"
+                      className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black transition-all active:scale-95"
                     >
-                      {loading ? 'Excluindo...' : 'Confirmar'}
+                      SIM, EXCLUIR
                     </button>
                     <button
                       type="button"
                       onClick={() => setConfirmDelete(false)}
-                      className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-slate-200 transition-colors"
+                      className="px-4 py-2 rounded-xl text-slate-400 hover:text-white text-xs font-bold transition-colors"
                     >
-                      Cancelar
+                      Não
                     </button>
-                  </>
+                  </div>
                 )}
               </div>
-            )}
-
-            {!editando && <div />}
+            ) : <div />}
 
             {/* Salvar + Cancelar */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4 w-full md:w-auto">
               <button
                 type="button"
                 onClick={onFechar}
-                className="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
+                className="flex-1 md:flex-none px-6 py-3 rounded-2xl text-slate-500 hover:text-white hover:bg-white/5 transition-all font-bold text-sm"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800
-                           text-white text-sm font-semibold transition-colors shadow-lg shadow-purple-900/40
-                           disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+                className="flex-1 md:flex-none px-10 py-3 rounded-2xl bg-linear-to-r from-purple-600 to-blue-600 
+                           hover:from-purple-500 hover:to-blue-500 disabled:opacity-50
+                           text-white text-sm font-black transition-all shadow-xl shadow-purple-900/40
+                           flex items-center justify-center gap-3 active:scale-95"
               >
                 {loading && (
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 )}
-                {loading ? 'Salvando...' : editando ? 'Salvar alterações' : 'Adicionar jogo'}
+                {loading ? 'Processando...' : editando ? 'Salvar Alterações' : 'Confirmar Jogo'}
               </button>
             </div>
           </div>
         </form>
       </div>
     </div>
+  )
+}
+
   )
 }
 

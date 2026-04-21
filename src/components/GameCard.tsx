@@ -29,11 +29,11 @@ export function GameCard({ jogo, onEdit }: Props) {
 
   return (
     <div
-      className="group relative flex flex-col rounded-xl overflow-hidden cursor-pointer
-                 bg-[#13132a] border border-white/5
-                 shadow-lg shadow-black/40
-                 transition-all duration-300
-                 hover:scale-[1.04] hover:border-purple-500/50 hover:shadow-purple-900/40 hover:shadow-xl"
+      className="group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer
+                 bg-white/[0.02] border border-white/5
+                 shadow-2xl shadow-black/60
+                 transition-all duration-500 ease-out
+                 hover:-translate-y-2 hover:border-purple-500/40 hover:shadow-purple-900/20 hover:bg-white/[0.04]"
       onClick={() => onEdit?.(jogo)}
     >
       {/* Imagem de capa */}
@@ -43,7 +43,7 @@ export function GameCard({ jogo, onEdit }: Props) {
           alt={jogo.nome_do_jogo}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className="object-cover transition-transform duration-700 group-hover:scale-110"
           unoptimized
           onError={(e) => {
             const img = e.currentTarget as HTMLImageElement
@@ -52,40 +52,47 @@ export function GameCard({ jogo, onEdit }: Props) {
         />
 
         {/* Overlay gradiente no hover */}
-        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent
-                        opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-linear-to-t from-[#05050a] via-transparent to-transparent
+                        opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
 
         {/* Nota — canto superior direito */}
         {nota && (
-          <div className="absolute top-2 right-2 flex items-center justify-center
-                          min-w-9 h-9 px-2 rounded-full bg-black/70 backdrop-blur-sm
-                          border border-purple-500/50 text-sm font-bold text-purple-300">
+          <div className="absolute top-3 right-3 flex items-center justify-center
+                          w-10 h-10 rounded-xl bg-black/60 backdrop-blur-md
+                          border border-white/10 text-sm font-black text-white shadow-lg shadow-black/40">
             {formatNota(jogo.nota_pessoal)}
           </div>
         )}
 
         {/* Plataforma — canto superior esquerdo */}
-        <div className="absolute top-2 left-2">
+        <div className="absolute top-3 left-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
           <PlatformBadge plataforma={jogo.plataforma} />
+        </div>
+        
+        {/* Status — Badge flutuante */}
+        <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end">
+           <StatusBadge status={jogo.status} />
         </div>
       </div>
 
       {/* Informações abaixo da capa */}
-      <div className="flex flex-col gap-1.5 p-3">
-        <p className="text-sm font-semibold text-slate-100 leading-tight line-clamp-2">
+      <div className="flex flex-col gap-2 p-4 bg-linear-to-b from-transparent to-black/40 backdrop-blur-xs">
+        <p className="text-sm font-bold text-white leading-snug line-clamp-2 min-h-10 group-hover:text-purple-300 transition-colors">
           {jogo.nome_do_jogo}
         </p>
 
-        <div className="flex items-center justify-between flex-wrap gap-1">
-          <StatusBadge status={jogo.status} />
+        <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-2 mt-auto">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-glow"></span>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+              {formatDateBr(jogo.data_inicio)}
+            </span>
+          </div>
           {jogo.genero && (
-            <span className="text-xs text-slate-500 truncate max-w-22.5">{jogo.genero}</span>
+            <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded-md text-slate-500 font-medium truncate max-w-24">
+              {jogo.genero}
+            </span>
           )}
-        </div>
-
-        <div className="mt-1 grid grid-cols-2 gap-2 text-[11px] text-slate-400">
-          <span>Início: <strong className="text-slate-300">{formatDateBr(jogo.data_inicio)}</strong></span>
-          <span>Fim: <strong className="text-slate-300">{formatDateBr(jogo.data_finalizada)}</strong></span>
         </div>
       </div>
     </div>

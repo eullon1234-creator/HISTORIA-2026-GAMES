@@ -49,6 +49,7 @@ export function AIAssistant({ jogos, onMutation }: Props) {
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<Message[]>(DEFAULT_MESSAGES)
   const loadedRef = useRef(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     try {
@@ -86,11 +87,15 @@ export function AIAssistant({ jogos, onMutation }: Props) {
     } catch {
       // ignora limite de storage
     }
+    // Scroll to bottom
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
   }, [messages])
 
   const placeholder = useMemo(() => {
-    if (!jogos.length) return 'Ex: me ajuda a organizar meu catálogo'
-    return 'Ex: qual jogo eu deveria zerar agora?'
+    if (!jogos.length) return 'Diga algo...'
+    return 'Dúvida ou comando gamer?'
   }, [jogos.length])
 
   const sendMessage = async () => {
@@ -154,73 +159,92 @@ export function AIAssistant({ jogos, onMutation }: Props) {
     <>
       <button
         onClick={() => setOpen((value) => !value)}
-        className="fixed z-50 bottom-5 right-5 px-4 py-3 rounded-full
-                   bg-purple-600 hover:bg-purple-500 text-white font-semibold
-                   shadow-xl shadow-purple-900/50 transition-colors"
+        className="fixed z-50 bottom-6 right-6 w-14 h-14 rounded-2xl
+                   bg-linear-to-br from-purple-600 to-blue-600 hover:scale-110 active:scale-95
+                   text-white text-2xl flex items-center justify-center
+                   shadow-2xl shadow-purple-900/40 transition-all group"
       >
-        {open ? 'Fechar bot' : 'Bot IA'}
+        <span className="group-hover:rotate-12 transition-transform">
+           {open ? '×' : '🤖'}
+        </span>
       </button>
 
       {open && (
-        <div className="fixed z-50 bottom-20 right-5 w-90 max-w-[calc(100vw-2rem)]
-            h-130 bg-[#13132a] border border-white/10 rounded-2xl
-                        shadow-2xl shadow-black/60 flex flex-col overflow-hidden">
-          <div className="px-4 py-3 border-b border-white/10 bg-[#181834]">
+        <div className="fixed z-50 bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)]
+            h-[500px] bg-[#0a0a14] border border-white/10 rounded-3xl
+                        shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+          <div className="px-6 py-4 border-b border-white/5 bg-white/[0.02] backdrop-blur-md">
             <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-bold text-white">Assistente Gamer IA</h3>
-                <p className="text-xs text-slate-400">Resumo, recomendação e ações reais no catálogo</p>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 border border-purple-500/20">
+                   🤖
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase tracking-tight leading-none">Bot História</h3>
+                  <div className="flex items-center gap-1.5 mt-1">
+                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                     <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Online</span>
+                  </div>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={clearMemory}
-                className="text-xs px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+                className="text-[10px] px-3 py-1.5 rounded-lg bg-white/5 hover:bg-red-500/10 hover:text-red-400 text-slate-400 font-bold uppercase tracking-widest transition-all"
               >
-                Limpar memória
+                Reset
               </button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-none">
             {messages.map((msg, index) => (
               <div
                 key={`${msg.role}-${index}`}
-                className={`max-w-[90%] px-3 py-2 rounded-xl text-sm whitespace-pre-wrap ${
-                  msg.role === 'user'
-                    ? 'ml-auto bg-purple-600 text-white'
-                    : 'bg-white/5 text-slate-200'
-                }`}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                {msg.content}
+                <div
+                  className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                    msg.role === 'user'
+                      ? 'bg-purple-600 text-white rounded-tr-none'
+                      : 'bg-white/5 text-slate-200 border border-white/5 rounded-tl-none backdrop-blur-sm'
+                  }`}
+                >
+                  {msg.content}
 
-                {msg.role === 'assistant' && (msg.meta?.strategy || msg.meta?.model) && (
-                  <div className="mt-1 text-[10px] text-slate-400">
-                    {msg.meta?.strategy ? `modo: ${msg.meta.strategy}` : 'modo: n/a'}
-                    {msg.meta?.provider ? ` • provider: ${msg.meta.provider}` : ''}
-                    {msg.meta?.model ? ` • modelo: ${msg.meta.model}` : ''}
-                  </div>
-                )}
+                  {msg.role === 'assistant' && (msg.meta?.strategy || msg.meta?.model) && (
+                    <div className="mt-2 pt-2 border-t border-white/5 text-[9px] text-slate-500 flex gap-2">
+                      <span>{msg.meta?.strategy}</span>
+                      <span>•</span>
+                      <span>{msg.meta?.model}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
 
             {loading && (
-              <div className="bg-white/5 text-slate-300 max-w-[80%] px-3 py-2 rounded-xl text-sm">
-                Pensando...
+              <div className="flex justify-start">
+                 <div className="bg-white/5 border border-white/5 text-slate-400 px-4 py-3 rounded-2xl rounded-tl-none text-xs flex gap-1 items-center">
+                    <span className="animate-bounce">●</span>
+                    <span className="animate-bounce delay-100">●</span>
+                    <span className="animate-bounce delay-200">●</span>
+                 </div>
               </div>
             )}
           </div>
 
-          <div className="p-3 border-t border-white/10 flex items-end gap-2">
-            <textarea
+          <div className="p-4 bg-white/[0.02] border-t border-white/5 flex items-center gap-3">
+            <input
+              type="text"
               value={input}
               onChange={(event) => setInput(event.target.value)}
               placeholder={placeholder}
-              rows={2}
-              className="flex-1 resize-none px-3 py-2 rounded-lg bg-white/5 border border-white/10
-                         text-sm text-slate-100 placeholder:text-slate-500
-                         focus:outline-none focus:border-purple-500/60"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10
+                         text-sm text-slate-100 placeholder:text-slate-600
+                         focus:outline-none focus:border-purple-500/40 transition-all"
               onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
+                if (event.key === 'Enter') {
                   event.preventDefault()
                   void sendMessage()
                 }
@@ -230,10 +254,10 @@ export function AIAssistant({ jogos, onMutation }: Props) {
             <button
               onClick={() => void sendMessage()}
               disabled={loading || !input.trim()}
-              className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:bg-purple-900/60
-                         text-white text-sm font-semibold transition-colors disabled:cursor-not-allowed"
+              className="w-10 h-10 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50
+                         text-white flex items-center justify-center transition-all active:scale-95 shadow-lg shadow-purple-900/20"
             >
-              Enviar
+              🚀
             </button>
           </div>
         </div>
@@ -241,3 +265,4 @@ export function AIAssistant({ jogos, onMutation }: Props) {
     </>
   )
 }
+

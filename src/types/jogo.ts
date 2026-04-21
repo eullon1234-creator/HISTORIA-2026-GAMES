@@ -16,7 +16,6 @@ export interface Jogo {
   valor_pago: number | null
   data_inicio: string | null       // ISO date string: "YYYY-MM-DD"
   nota_pessoal: number | null      // 0 a 10
-  data_finalizada: string | null   // ISO date string: "YYYY-MM-DD"
   desistiu: boolean
   capa_url: string | null
   created_at?: string
