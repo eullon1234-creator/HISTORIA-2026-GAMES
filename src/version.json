@@ -1,5 +1,5 @@
 {
-  "version": "1.15",
+  "version": "1.16",
   "last_update": "2026-04-21",
-  "description": "Mudança para build dinâmico na Vercel (removido output: export) e limpeza de estilos no layout."
+  "description": "Removido sistema de login. Acesso direto à biblioteca de jogos habilitado."
 }
