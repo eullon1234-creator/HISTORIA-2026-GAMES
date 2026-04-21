@@ -51,45 +51,45 @@ export function GameCard({ jogo, onEdit }: Props) {
           }}
         />
 
-        {/* Overlay gradiente no hover */}
+        {/* Overlay gradiente */}
         <div className="absolute inset-0 bg-linear-to-t from-[#05050a] via-transparent to-transparent
-                        opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+                        opacity-60 md:opacity-40 group-hover:opacity-80 transition-opacity duration-500" />
 
         {/* Nota — canto superior direito */}
         {nota && (
-          <div className="absolute top-3 right-3 flex items-center justify-center
-                          w-10 h-10 rounded-xl bg-black/60 backdrop-blur-md
-                          border border-white/10 text-sm font-black text-white shadow-lg shadow-black/40">
+          <div className="absolute top-2 right-2 md:top-3 md:right-3 flex items-center justify-center
+                          w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-black/60 backdrop-blur-md
+                          border border-white/10 text-xs md:text-sm font-black text-white shadow-lg shadow-black/40">
             {formatNota(jogo.nota_pessoal)}
           </div>
         )}
 
-        {/* Plataforma — canto superior esquerdo */}
-        <div className="absolute top-3 left-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+        {/* Plataforma — canto superior esquerdo (Sempre visível no mobile) */}
+        <div className="absolute top-2 left-2 md:top-3 md:left-3 md:translate-y-2 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-300 scale-90 md:scale-100 origin-top-left">
           <PlatformBadge plataforma={jogo.plataforma} />
         </div>
         
         {/* Status — Badge flutuante */}
-        <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end">
+        <div className="absolute bottom-2 left-2 right-2 md:bottom-3 md:left-3 md:right-3 flex justify-between items-end">
            <StatusBadge status={jogo.status} />
         </div>
       </div>
 
       {/* Informações abaixo da capa */}
-      <div className="flex flex-col gap-2 p-4 bg-linear-to-b from-transparent to-black/40 backdrop-blur-xs">
-        <p className="text-sm font-bold text-white leading-snug line-clamp-2 min-h-10 group-hover:text-purple-300 transition-colors">
+      <div className="flex flex-col gap-1.5 md:gap-2 p-3 md:p-4 bg-linear-to-b from-transparent to-black/40 backdrop-blur-xs">
+        <p className="text-xs md:text-sm font-bold text-white leading-tight md:leading-snug line-clamp-2 min-h-8 md:min-h-10 group-hover:text-purple-300 transition-colors">
           {jogo.nome_do_jogo}
         </p>
 
-        <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-2 mt-auto">
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-glow"></span>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+        <div className="flex items-center justify-between gap-1 border-t border-white/5 pt-2 mt-auto">
+          <div className="flex items-center gap-1">
+            <span className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-purple-500 shadow-glow"></span>
+            <span className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase tracking-widest">
               {formatDateBr(jogo.data_inicio)}
             </span>
           </div>
           {jogo.genero && (
-            <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded-md text-slate-500 font-medium truncate max-w-24">
+            <span className="text-[8px] md:text-[10px] bg-white/5 px-1.5 py-0.5 rounded-md text-slate-600 font-medium truncate max-w-16 md:max-w-24">
               {jogo.genero}
             </span>
           )}

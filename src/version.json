@@ -1,5 +1,5 @@
 {
-  "version": "1.17",
+  "version": "1.18",
   "last_update": "2026-04-21",
-  "description": "Melhoria no tratamento de erro (Failed to fetch) para alertar sobre o despertar do banco de dados Supabase."
+  "description": "Otimização completa do layout mobile (Navbar, Dashboard, GameCard e GameForm)."
 }

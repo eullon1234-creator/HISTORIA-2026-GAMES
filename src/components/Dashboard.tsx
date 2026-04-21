@@ -129,7 +129,7 @@ export function Dashboard({ jogos, onNovoJogo, onEditJogo, onSair, carregando = 
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#05050a]">
       <Navbar
         total={jogosOrdenados.length}
         filtroStatus={filtroStatus}
@@ -143,51 +143,51 @@ export function Dashboard({ jogos, onNovoJogo, onEditJogo, onSair, carregando = 
         onSair={onSair}
       />
 
-      <main className="flex-1 max-w-screen-2xl mx-auto px-6 py-10 w-full">
-        {/* Painel de Resumo */}
-        <section className="mb-10 grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="glass rounded-2xl px-6 py-5 border-white/5 bg-cyan-500/5">
-            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Em Campanha</p>
-            <p className="text-3xl font-black text-cyan-400 tracking-tighter">{resumo.jogando}</p>
+      <main className="flex-1 max-w-screen-2xl mx-auto px-4 md:px-6 py-6 md:py-10 w-full">
+        {/* Painel de Resumo - Mais compacto no mobile */}
+        <section className="mb-8 md:mb-10 grid grid-cols-3 gap-3 md:gap-6">
+          <div className="glass rounded-xl md:rounded-2xl px-3 py-3 md:px-6 md:py-5 border-white/5 bg-cyan-500/5 text-center sm:text-left">
+            <p className="text-[8px] md:text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-0.5 md:mb-1">Jogando</p>
+            <p className="text-xl md:text-3xl font-black text-cyan-400 tracking-tighter">{resumo.jogando}</p>
           </div>
-          <div className="glass rounded-2xl px-6 py-5 border-white/5 bg-emerald-500/5">
-            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Zerados</p>
-            <p className="text-3xl font-black text-emerald-400 tracking-tighter">{resumo.zerados}</p>
+          <div className="glass rounded-xl md:rounded-2xl px-3 py-3 md:px-6 md:py-5 border-white/5 bg-emerald-500/5 text-center sm:text-left">
+            <p className="text-[8px] md:text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-0.5 md:mb-1">Zerados</p>
+            <p className="text-xl md:text-3xl font-black text-emerald-400 tracking-tighter">{resumo.zerados}</p>
           </div>
-          <div className="glass rounded-2xl px-6 py-5 border-white/5 bg-fuchsia-500/5">
-            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Backlog</p>
-            <p className="text-3xl font-black text-fuchsia-400 tracking-tighter">{resumo.backlog}</p>
+          <div className="glass rounded-xl md:rounded-2xl px-3 py-3 md:px-6 md:py-5 border-white/5 bg-fuchsia-500/5 text-center sm:text-left">
+            <p className="text-[8px] md:text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-0.5 md:mb-1">Backlog</p>
+            <p className="text-xl md:text-3xl font-black text-fuchsia-400 tracking-tighter">{resumo.backlog}</p>
           </div>
         </section>
 
-        <div className="mb-8 flex items-baseline gap-2">
-          <h1 className="text-3xl font-black text-white tracking-tighter uppercase">
+        <div className="mb-6 md:mb-8 flex items-baseline gap-2">
+          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter uppercase">
             Sua <span className="text-purple-500">Coleção</span>
           </h1>
-          <div className="h-1 w-12 bg-linear-to-r from-purple-600 to-blue-600 rounded-full"></div>
+          <div className="h-1 w-8 md:w-12 bg-linear-to-r from-purple-600 to-blue-600 rounded-full"></div>
         </div>
 
         {carregando && (
-          <div className="mb-8 p-4 rounded-2xl bg-white/5 border border-white/5 text-slate-400 text-sm font-bold flex items-center gap-3">
+          <div className="mb-8 p-4 rounded-2xl bg-white/5 border border-white/5 text-slate-400 text-xs md:text-sm font-bold flex items-center gap-3">
             <span className="w-4 h-4 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
             Sincronizando biblioteca...
           </div>
         )}
 
         {erro && (
-          <div className="mb-8 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-bold">
+          <div className="mb-8 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs md:text-sm font-bold">
             ⚠️ {erro}
           </div>
         )}
 
         {jogosOrdenados.length === 0 && !carregando ? (
-          <div className="flex flex-col items-center justify-center py-40 gap-6 glass rounded-3xl border-white/5 animate-float">
-            <div className="w-24 h-24 rounded-3xl bg-white/5 flex items-center justify-center text-5xl shadow-inner border border-white/10">
+          <div className="flex flex-col items-center justify-center py-20 md:py-40 gap-6 glass rounded-3xl border-white/5 animate-float mx-2">
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-3xl bg-white/5 flex items-center justify-center text-4xl md:text-5xl shadow-inner border border-white/10">
                🎮
             </div>
-            <div className="text-center">
-              <p className="text-xl font-bold text-white">Nenhum jogo encontrado</p>
-              <p className="text-sm text-slate-500 max-w-xs mt-2">
+            <div className="text-center px-6">
+              <p className="text-lg md:text-xl font-bold text-white">Nenhum jogo encontrado</p>
+              <p className="text-xs md:text-sm text-slate-500 max-w-xs mt-2 mx-auto">
                 {filtroPesquisa
                   ? `Não encontramos resultados para "${filtroPesquisa}".`
                   : 'Sua biblioteca está vazia. Comece a registrar sua história gamer agora mesmo!'}
@@ -202,10 +202,7 @@ export function Dashboard({ jogos, onNovoJogo, onEditJogo, onSair, carregando = 
           </div>
         ) : (
           <div
-            className="grid gap-6"
-            style={{
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            }}
+            className="grid gap-4 md:gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
           >
             {jogosVisiveis.map((jogo) => (
               <GameCard key={jogo.id} jogo={jogo} onEdit={onEditJogo} />
@@ -216,24 +213,24 @@ export function Dashboard({ jogos, onNovoJogo, onEditJogo, onSair, carregando = 
         {jogosOrdenados.length > 0 && (
           <div className="mt-12 flex flex-col items-center gap-4">
             <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">
-              Mostrando {jogosVisiveis.length} de {jogosOrdenados.length} títulos
+              {jogosVisiveis.length} de {jogosOrdenados.length} títulos
             </p>
 
             {hasMore && (
               <button
                 onClick={() => setPage((prev) => prev + 1)}
-                className="px-10 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-black transition-all active:scale-95 shadow-xl"
+                className="w-full sm:w-auto px-10 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-black transition-all active:scale-95 shadow-xl"
               >
-                Carregar Mais Jogos
+                Carregar Mais
               </button>
             )}
           </div>
         )}
       </main>
 
-      <footer className="w-full py-6 px-6 border-t border-white/5 bg-black/20 backdrop-blur-sm">
-        <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+      <footer className="w-full py-6 px-4 md:px-6 border-t border-white/5 bg-black/20 backdrop-blur-sm mt-auto">
+        <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2 text-slate-500 text-[9px] md:text-[10px] font-bold uppercase tracking-widest">
             <span>© 2026 History Game Tracker</span>
           </div>
           
@@ -245,7 +242,7 @@ export function Dashboard({ jogos, onNovoJogo, onEditJogo, onSair, carregando = 
           </div>
           
           <div className="text-slate-600 text-[9px] font-medium italic">
-            Última atualização: {versionData.last_update}
+            Atualizado em: {versionData.last_update}
           </div>
         </div>
       </footer>

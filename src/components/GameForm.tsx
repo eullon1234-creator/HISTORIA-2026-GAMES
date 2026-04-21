@@ -116,20 +116,20 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md sm:p-4 animate-in fade-in duration-300"
     >
       <div
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto
-                    bg-[#0a0a14] border border-white/10 rounded-3xl shadow-2xl shadow-purple-900/20"
+        className="relative w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto
+                    bg-[#0a0a14] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-purple-900/20"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-8 py-6 bg-[#0a0a14]/80 backdrop-blur-md border-b border-white/5">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-6 sm:px-8 py-5 sm:py-6 bg-[#0a0a14]/80 backdrop-blur-md border-b border-white/5">
           <div className="flex items-center gap-3">
              <div className="w-8 h-8 rounded-lg bg-purple-600/20 flex items-center justify-center text-purple-400 border border-purple-500/20">
                 {editando ? '✏️' : '🎮'}
              </div>
-             <h2 className="text-xl font-black text-white tracking-tight uppercase">
+             <h2 className="text-lg sm:text-xl font-black text-white tracking-tight uppercase">
                {editando ? 'Editar Jogo' : 'Novo Jogo'}
              </h2>
           </div>
@@ -142,10 +142,10 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-8 py-8 flex flex-col gap-8">
+        <form onSubmit={handleSubmit} className="px-6 sm:px-8 py-6 sm:py-8 flex flex-col gap-6 sm:gap-8">
           {/* Preview da capa + Infos Básicas */}
-          <div className="flex flex-col md:flex-row gap-8 items-start">
-            <div className="relative shrink-0 w-full md:w-44 aspect-2/3 rounded-2xl overflow-hidden border border-white/10 bg-white/5 group shadow-2xl shadow-black">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
+            <div className="relative shrink-0 w-32 md:w-44 aspect-2/3 rounded-2xl overflow-hidden border border-white/10 bg-white/5 group shadow-2xl shadow-black self-center md:self-start">
               <Image
                 src={previewUrl || PLACEHOLDER_IMG}
                 alt="Preview da capa"
@@ -157,15 +157,12 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
                 }}
               />
               <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-2 left-2 right-2 text-[10px] text-center text-white/40 font-bold uppercase tracking-widest">
-                 Preview da Capa
-              </div>
             </div>
 
             <div className="flex-1 w-full flex flex-col gap-5">
               {/* Nome */}
               <div>
-                <label className={labelClass}>Nome da Obra-Prima</label>
+                <label className={labelClass}>Nome do Jogo</label>
                 <input
                   type="text"
                   value={form.nome_do_jogo}
@@ -178,7 +175,7 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
 
               {/* URL da capa */}
               <div>
-                <label className={labelClass}>Link da Arte (URL)</label>
+                <label className={labelClass}>Link da Capa (URL)</label>
                 <input
                   type="url"
                   value={form.capa_url || ''}
@@ -193,9 +190,9 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
           <div className="h-px bg-white/5 w-full" />
 
           {/* Plataforma + Gênero */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
             <div className="relative">
-              <label className={labelClass}>Plataforma de Destino</label>
+              <label className={labelClass}>Plataforma</label>
               <input
                 type="text"
                 list="plataformas-sugeridas"
@@ -211,7 +208,7 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
               </datalist>
             </div>
             <div>
-              <label className={labelClass}>Gênero / Estilo</label>
+              <label className={labelClass}>Gênero</label>
               <input
                 type="text"
                 value={form.genero}
@@ -224,16 +221,16 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
 
           {/* Status */}
           <div>
-            <label className={labelClass}>Progresso Atual</label>
-            <div className="flex flex-wrap gap-2.5 p-2 rounded-2xl bg-white/[0.02] border border-white/5">
+            <label className={labelClass}>Progresso</label>
+            <div className="flex flex-wrap gap-2 p-1.5 rounded-2xl bg-white/[0.02] border border-white/5">
               {STATUS_OPTIONS.map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => set('status', s)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  className={`flex-1 min-w-[90px] px-3 py-2 rounded-xl text-[11px] font-bold transition-all ${
                     form.status === s
-                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40 scale-105'
+                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
                       : 'bg-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
                   }`}
                 >
@@ -244,19 +241,19 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
           </div>
 
           {/* Nota + Valor */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="glass p-5 rounded-2xl border-white/5">
-              <div className="flex items-center justify-between mb-4">
-                <label className={labelClass + ' mb-0'}>Sua Nota</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8">
+            <div className="glass p-4 sm:p-5 rounded-2xl border-white/5">
+              <div className="flex items-center justify-between mb-3">
+                <label className={labelClass + ' mb-0'}>Nota</label>
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-black text-purple-400">
+                  <span className="text-xl sm:text-2xl font-black text-purple-400">
                     {form.nota_pessoal ?? '—'}
                   </span>
                   {form.nota_pessoal !== null && (
                     <button
                       type="button"
                       onClick={() => set('nota_pessoal', null)}
-                      className="text-[10px] text-slate-600 hover:text-slate-400 font-bold uppercase tracking-widest"
+                      className="text-[9px] text-slate-600 hover:text-slate-400 font-bold uppercase tracking-widest"
                     >
                       Limpar
                     </button>
@@ -274,8 +271,8 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
               />
             </div>
 
-            <div className="glass p-5 rounded-2xl border-white/5">
-              <label className={labelClass}>Investimento (R$)</label>
+            <div className="glass p-4 sm:p-5 rounded-2xl border-white/5">
+              <label className={labelClass}>Valor Pago (R$)</label>
               <div className="relative">
                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 font-bold">R$</span>
                  <input
@@ -292,8 +289,8 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
           </div>
 
           {/* Datas */}
-          <div className="glass p-5 rounded-2xl border-white/5">
-            <label className={labelClass}>Início da Jornada</label>
+          <div className="glass p-4 sm:p-5 rounded-2xl border-white/5">
+            <label className={labelClass}>Data de Início</label>
             <input
               type="date"
               value={form.data_inicio || ''}
@@ -304,68 +301,67 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
 
           {/* Erro */}
           {erro && (
-            <div className="px-6 py-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-bold animate-pulse">
+            <div className="px-5 py-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] font-bold">
               ⚠️ {erro}
             </div>
           )}
 
           {/* Ações */}
-          <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-6 pt-4 border-t border-white/5">
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-6 pt-4 border-t border-white/5">
             {/* Deletar */}
             {editando ? (
-              <div className="flex items-center gap-3">
+              <div className="w-full sm:w-auto">
                 {!confirmDelete ? (
                   <button
                     type="button"
                     onClick={() => setConfirmDelete(true)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-red-500 hover:bg-red-500/10 transition-colors uppercase tracking-widest"
+                    className="w-full sm:w-auto px-4 py-2 rounded-xl text-[10px] font-bold text-red-500/60 hover:text-red-500 hover:bg-red-500/5 transition-colors uppercase tracking-widest"
                   >
-                    Excluir da História
+                    Excluir Jogo
                   </button>
                 ) : (
-                  <div className="flex items-center gap-2 bg-red-500/10 p-2 rounded-2xl border border-red-500/20">
-                    <span className="text-[10px] text-red-400 font-bold uppercase tracking-widest px-2">Tem certeza?</span>
+                  <div className="flex items-center justify-between gap-2 bg-red-500/10 p-1.5 rounded-2xl border border-red-500/20">
+                    <span className="text-[9px] text-red-400 font-bold uppercase tracking-widest px-2">Confirma?</span>
                     <button
                       type="button"
                       onClick={handleDeletar}
                       disabled={loading}
-                      className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black transition-all active:scale-95"
+                      className="px-4 py-2 rounded-xl bg-red-600 text-white text-[10px] font-black transition-all active:scale-95"
                     >
-                      SIM, EXCLUIR
+                      SIM
                     </button>
                     <button
                       type="button"
                       onClick={() => setConfirmDelete(false)}
-                      className="px-4 py-2 rounded-xl text-slate-400 hover:text-white text-xs font-bold transition-colors"
+                      className="px-3 py-2 rounded-xl text-slate-400 text-[10px] font-bold"
                     >
                       Não
                     </button>
                   </div>
                 )}
               </div>
-            ) : <div />}
+            ) : <div className="hidden sm:block" />}
 
             {/* Salvar + Cancelar */}
-            <div className="flex items-center gap-4 w-full md:w-auto">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={onFechar}
-                className="flex-1 md:flex-none px-6 py-3 rounded-2xl text-slate-500 hover:text-white hover:bg-white/5 transition-all font-bold text-sm"
+                className="flex-1 sm:flex-none px-5 py-3 rounded-2xl text-slate-500 hover:text-white transition-all font-bold text-sm"
               >
-                Cancelar
+                Sair
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 md:flex-none px-10 py-3 rounded-2xl bg-linear-to-r from-purple-600 to-blue-600 
-                           hover:from-purple-500 hover:to-blue-500 disabled:opacity-50
+                className="flex-[2] sm:flex-none px-8 py-3 rounded-2xl bg-linear-to-r from-purple-600 to-blue-600 
                            text-white text-sm font-black transition-all shadow-xl shadow-purple-900/40
                            flex items-center justify-center gap-3 active:scale-95"
               >
                 {loading && (
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 )}
-                {loading ? 'Processando...' : editando ? 'Salvar Alterações' : 'Confirmar Jogo'}
+                {editando ? 'Salvar' : 'Adicionar'}
               </button>
             </div>
           </div>
@@ -376,13 +372,13 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
 }
 
 // Utilitários de estilo
-const labelClass = 'block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5'
+const labelClass = 'block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5'
 const inputClass = `
-  w-full px-3 py-2 rounded-lg
+  w-full px-4 py-3 rounded-xl
   bg-white/5 border border-white/10
   text-sm text-slate-200
-  placeholder:text-slate-600
-  focus:outline-none focus:border-purple-500/60 focus:bg-white/8
-  disabled:opacity-40 disabled:cursor-not-allowed
-  transition-colors
+  placeholder:text-slate-700
+  focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.08]
+  disabled:opacity-40
+  transition-all
 `
