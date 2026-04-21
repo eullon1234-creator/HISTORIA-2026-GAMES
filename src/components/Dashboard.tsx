@@ -4,10 +4,8 @@ import { useState, useMemo, useEffect } from 'react'
 import type { Jogo, StatusJogo } from '@/types/jogo'
 import { GameCard } from './GameCard'
 import { Navbar } from './Navbar'
-
-<<<<<<< HEAD
 import versionData from '../version.json'
-=======
+
 type OrdenacaoJogo = 'recentes' | 'nome-asc' | 'nota-desc' | 'status'
 const PAGE_SIZE = 24
 
@@ -19,7 +17,7 @@ function initialFiltroStatus(): StatusJogo | 'Todos' {
   if (typeof window === 'undefined') return 'Todos'
   const savedStatus = localStorage.getItem(STORAGE_STATUS)
   if (savedStatus === 'Todos' || savedStatus === 'Jogando' || savedStatus === 'Zerei' || savedStatus === 'Pausa' || savedStatus === 'Desisti' || savedStatus === 'Querendo...') {
-    return savedStatus
+    return savedStatus as StatusJogo | 'Todos'
   }
   return 'Todos'
 }
@@ -33,11 +31,10 @@ function initialOrdenacao(): OrdenacaoJogo {
   if (typeof window === 'undefined') return 'recentes'
   const savedOrdenacao = localStorage.getItem(STORAGE_ORDENACAO)
   if (savedOrdenacao === 'recentes' || savedOrdenacao === 'nome-asc' || savedOrdenacao === 'nota-desc' || savedOrdenacao === 'status') {
-    return savedOrdenacao
+    return savedOrdenacao as OrdenacaoJogo
   }
   return 'recentes'
 }
->>>>>>> be609d2b091311418b95ce3de10281957cb08fbb
 
 interface Props {
   jogos: Jogo[]
@@ -146,8 +143,23 @@ export function Dashboard({ jogos, onNovoJogo, onEditJogo, onSair, carregando = 
         onSair={onSair}
       />
 
-<<<<<<< HEAD
       <main className="flex-1 max-w-screen-2xl mx-auto px-6 py-10 w-full">
+        {/* Painel de Resumo */}
+        <section className="mb-10 grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="glass rounded-2xl px-6 py-5 border-white/5 bg-cyan-500/5">
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Em Campanha</p>
+            <p className="text-3xl font-black text-cyan-400 tracking-tighter">{resumo.jogando}</p>
+          </div>
+          <div className="glass rounded-2xl px-6 py-5 border-white/5 bg-emerald-500/5">
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Zerados</p>
+            <p className="text-3xl font-black text-emerald-400 tracking-tighter">{resumo.zerados}</p>
+          </div>
+          <div className="glass rounded-2xl px-6 py-5 border-white/5 bg-fuchsia-500/5">
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Backlog</p>
+            <p className="text-3xl font-black text-fuchsia-400 tracking-tighter">{resumo.backlog}</p>
+          </div>
+        </section>
+
         <div className="mb-8 flex items-baseline gap-2">
           <h1 className="text-3xl font-black text-white tracking-tighter uppercase">
             Sua <span className="text-purple-500">Coleção</span>
@@ -155,58 +167,32 @@ export function Dashboard({ jogos, onNovoJogo, onEditJogo, onSair, carregando = 
           <div className="h-1 w-12 bg-linear-to-r from-purple-600 to-blue-600 rounded-full"></div>
         </div>
 
-        {jogosFiltrados.length === 0 ? (
+        {carregando && (
+          <div className="mb-8 p-4 rounded-2xl bg-white/5 border border-white/5 text-slate-400 text-sm font-bold flex items-center gap-3">
+            <span className="w-4 h-4 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+            Sincronizando biblioteca...
+          </div>
+        )}
+
+        {erro && (
+          <div className="mb-8 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-bold">
+            ⚠️ {erro}
+          </div>
+        )}
+
+        {jogosOrdenados.length === 0 && !carregando ? (
           <div className="flex flex-col items-center justify-center py-40 gap-6 glass rounded-3xl border-white/5 animate-float">
             <div className="w-24 h-24 rounded-3xl bg-white/5 flex items-center justify-center text-5xl shadow-inner border border-white/10">
                🎮
             </div>
             <div className="text-center">
-              <p className="text-xl font-bold text-white">Onde estão os jogos?</p>
+              <p className="text-xl font-bold text-white">Nenhum jogo encontrado</p>
               <p className="text-sm text-slate-500 max-w-xs mt-2">
                 {filtroPesquisa
-                  ? `Nenhum título encontrado para "${filtroPesquisa}". Tente outros termos.`
+                  ? `Não encontramos resultados para "${filtroPesquisa}".`
                   : 'Sua biblioteca está vazia. Comece a registrar sua história gamer agora mesmo!'}
               </p>
             </div>
-=======
-      <main className="max-w-screen-2xl mx-auto px-4 py-8">
-        <section className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="game-panel rounded-xl px-4 py-3">
-            <p className="text-[11px] uppercase tracking-wider text-slate-400">Em campanha</p>
-            <p className="text-2xl font-bold text-cyan-300">{resumo.jogando}</p>
-          </div>
-          <div className="game-panel rounded-xl px-4 py-3">
-            <p className="text-[11px] uppercase tracking-wider text-slate-400">Concluídos</p>
-            <p className="text-2xl font-bold text-emerald-300">{resumo.zerados}</p>
-          </div>
-          <div className="game-panel rounded-xl px-4 py-3">
-            <p className="text-[11px] uppercase tracking-wider text-slate-400">Backlog</p>
-            <p className="text-2xl font-bold text-fuchsia-300">{resumo.backlog}</p>
-          </div>
-        </section>
-
-        {carregando && (
-          <div className="mb-4 px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-300 text-sm">
-            Carregando jogos...
-          </div>
-        )}
-
-        {erro && (
-          <div className="mb-4 px-4 py-3 rounded-lg bg-red-900/30 border border-red-500/40 text-red-300 text-sm">
-            {erro}
-          </div>
-        )}
-
-        {jogosOrdenados.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 gap-4 text-slate-500">
-            <span className="text-6xl">🕹️</span>
-            <p className="text-lg font-semibold text-slate-300">Nenhum jogo encontrado</p>
-            <p className="text-sm">
-              {filtroPesquisa
-                ? `Sem resultados para "${filtroPesquisa}"`
-                : 'Adicione seu primeiro jogo!'}
-            </p>
->>>>>>> be609d2b091311418b95ce3de10281957cb08fbb
             <button
               onClick={onNovoJogo}
               className="px-8 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-bold transition-all hover:scale-105 active:scale-95"
@@ -228,17 +214,17 @@ export function Dashboard({ jogos, onNovoJogo, onEditJogo, onSair, carregando = 
         )}
 
         {jogosOrdenados.length > 0 && (
-          <div className="mt-6 flex flex-col items-center gap-3">
-            <p className="text-xs text-slate-500">
-              Mostrando {jogosVisiveis.length} de {jogosOrdenados.length} jogos
+          <div className="mt-12 flex flex-col items-center gap-4">
+            <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">
+              Mostrando {jogosVisiveis.length} de {jogosOrdenados.length} títulos
             </p>
 
             {hasMore && (
               <button
                 onClick={() => setPage((prev) => prev + 1)}
-                className="px-5 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 text-sm font-semibold transition-colors"
+                className="px-10 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-black transition-all active:scale-95 shadow-xl"
               >
-                Carregar mais
+                Carregar Mais Jogos
               </button>
             )}
           </div>

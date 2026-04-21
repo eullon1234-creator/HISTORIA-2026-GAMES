@@ -32,12 +32,11 @@ export function Navbar({
   onSair,
 }: Props) {
   return (
-<<<<<<< HEAD
     <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#05050a]/80 backdrop-blur-xl">
       <div className="max-w-screen-2xl mx-auto px-6 py-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-        {/* Logo + contador */}
-        <div className="flex items-center gap-4">
+        {/* Logo + Info */}
+        <div className="flex items-center gap-6">
           <div className="flex items-center gap-3 group cursor-pointer">
             <div className="w-10 h-10 rounded-xl bg-linear-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-900/30 group-hover:scale-110 transition-transform">
               <span className="text-xl">🎮</span>
@@ -51,22 +50,6 @@ export function Navbar({
               </span>
             </div>
           </div>
-=======
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0d0d1a]/90 backdrop-blur-md">
-      <div className="max-w-screen-2xl mx-auto px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
-        {/* Logo + contador */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🕹️</span>
-            <span className="text-lg font-extrabold text-white tracking-wide uppercase">
-              Historia <span className="text-fuchsia-400">2026</span>
-            </span>
-          </div>
-          <span className="text-[11px] px-2 py-0.5 rounded-full bg-fuchsia-900/45 text-fuchsia-300 font-semibold uppercase tracking-wider border border-fuchsia-500/30">
-            {total} {total === 1 ? 'Item' : 'Itens'}
-          </span>
->>>>>>> be609d2b091311418b95ce3de10281957cb08fbb
         </div>
 
         {/* Busca e Ações */}
@@ -87,55 +70,38 @@ export function Navbar({
             />
           </div>
 
-<<<<<<< HEAD
-          <button
-            onClick={onNovoJogo}
-            className="group px-5 py-2.5 rounded-xl bg-linear-to-r from-purple-600 to-blue-600 
-                       hover:from-purple-500 hover:to-blue-500
-                       text-white text-sm font-bold transition-all
-                       shadow-lg shadow-purple-900/20 hover:shadow-purple-700/40
-                       flex items-center gap-2 active:scale-95"
-          >
-            <span className="text-lg group-hover:rotate-90 transition-transform inline-block">+</span>
-            Novo Jogo
-=======
-        <div className="flex items-center gap-2">
-          <select
-            value={ordenacao}
-            onChange={(e) => onOrdenacao(e.target.value as 'recentes' | 'nome-asc' | 'nota-desc' | 'status')}
-            className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-slate-200 text-sm focus:outline-none focus:border-purple-500/60"
-          >
-            <option value="recentes">Mais recentes</option>
-            <option value="nome-asc">Nome (A-Z)</option>
-            <option value="nota-desc">Melhor nota</option>
-            <option value="status">Status</option>
-          </select>
+          <div className="flex items-center gap-3">
+             <select
+                value={ordenacao}
+                onChange={(e) => onOrdenacao(e.target.value as any)}
+                className="hidden md:block px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-xs font-bold focus:outline-none focus:border-purple-500/40 transition-all cursor-pointer"
+              >
+                <option value="recentes">Mais recentes</option>
+                <option value="nome-asc">Nome (A-Z)</option>
+                <option value="nota-desc">Melhor nota</option>
+                <option value="status">Status</option>
+              </select>
 
-          <button
-            onClick={onLimparFiltros}
-            className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 text-sm font-semibold transition-colors"
-          >
-            Limpar
-          </button>
-        </div>
+              <button
+                onClick={onNovoJogo}
+                className="group px-6 py-2.5 rounded-xl bg-linear-to-r from-purple-600 to-blue-600 
+                           hover:from-purple-500 hover:to-blue-500
+                           text-white text-sm font-bold transition-all
+                           shadow-lg shadow-purple-900/20 hover:shadow-purple-700/40
+                           flex items-center gap-2 active:scale-95"
+              >
+                <span className="text-lg group-hover:rotate-90 transition-transform inline-block leading-none">+</span>
+                <span className="hidden sm:inline">Novo Jogo</span>
+              </button>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onNovoJogo}
-            className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500
-                     text-white text-sm font-semibold transition-colors
-                     shadow-lg shadow-purple-900/40 whitespace-nowrap"
-          >
-            + Novo Jogo
-          </button>
-
-          <button
-            onClick={onSair}
-            className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 text-sm font-semibold transition-colors"
-          >
-            Sair
->>>>>>> be609d2b091311418b95ce3de10281957cb08fbb
-          </button>
+              <button
+                onClick={onSair}
+                className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all active:scale-95"
+                title="Sair"
+              >
+                🚪
+              </button>
+          </div>
         </div>
       </div>
 
@@ -158,6 +124,15 @@ export function Navbar({
               )}
             </button>
           ))}
+          
+          <div className="w-px h-4 bg-white/5 mx-1" />
+          
+          <button
+            onClick={onLimparFiltros}
+            className="text-[10px] px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-400 font-black uppercase tracking-widest transition-colors"
+          >
+            Limpar
+          </button>
         </div>
         
         <div className="ml-auto flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
@@ -168,4 +143,3 @@ export function Navbar({
     </header>
   )
 }
-

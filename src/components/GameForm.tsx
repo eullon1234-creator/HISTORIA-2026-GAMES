@@ -375,9 +375,6 @@ export function GameForm({ jogo, onSalvar, onDeletar, onFechar }: Props) {
   )
 }
 
-  )
-}
-
 // Utilitários de estilo
 const labelClass = 'block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5'
 const inputClass = `

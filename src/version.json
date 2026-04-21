@@ -1,5 +1,5 @@
 {
-  "version": "1.10",
+  "version": "1.13",
   "last_update": "2026-04-21",
-  "description": "Correção de conflito de merge e restauração da HomePage"
+  "description": "Limpeza total de conflitos em globals.css e GameCard.tsx. Build local validado com sucesso."
 }
