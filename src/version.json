@@ -1,5 +1,5 @@
 {
-  "version": "1.16",
+  "version": "1.17",
   "last_update": "2026-04-21",
-  "description": "Removido sistema de login. Acesso direto à biblioteca de jogos habilitado."
+  "description": "Melhoria no tratamento de erro (Failed to fetch) para alertar sobre o despertar do banco de dados Supabase."
 }

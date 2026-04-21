@@ -25,7 +25,12 @@ export function AppShell({ jogosList = [] }: Props) {
       const lista = await buscarJogos()
       setJogos(lista)
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Erro ao carregar jogos.')
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido'
+      if (msg.includes('Failed to fetch')) {
+        setErro('O banco de dados está acordando... Por favor, aguarde 1 minuto e atualize a página. ☕')
+      } else {
+        setErro(msg)
+      }
       setJogos([])
     } finally {
       setLoadingJogos(false)
