@@ -1,5 +1,5 @@
 {
-  "version": "1.14",
+  "version": "1.15",
   "last_update": "2026-04-21",
-  "description": "Correção do erro 404 no Vercel (basePath removido para builds fora do GitHub Actions)"
+  "description": "Mudança para build dinâmico na Vercel (removido output: export) e limpeza de estilos no layout."
 }
