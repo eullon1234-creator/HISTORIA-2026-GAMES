@@ -1,5 +1,5 @@
 {
-  "version": "1.13",
+  "version": "1.14",
   "last_update": "2026-04-21",
-  "description": "Limpeza total de conflitos em globals.css e GameCard.tsx. Build local validado com sucesso."
+  "description": "Correção do erro 404 no Vercel (basePath removido para builds fora do GitHub Actions)"
 }

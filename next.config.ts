@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const isGithubPages = process.env.NODE_ENV === 'production';
+const isGithubPages = process.env.GITHUB_ACTIONS === 'true';
 const repoName = 'HISTORIA-2026-GAMES';
 
 const nextConfig: any = {
